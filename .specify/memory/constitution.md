@@ -1,22 +1,54 @@
 <!--
 Sync Impact Report
-- Version: UNSET -> 0.1.0
-- Modified principles:
-	- Template placeholder 1 -> I. Command-Safe TUI
-	- Template placeholder 2 -> II. macOS 26.x + Apple Silicon Target
-	- Template placeholder 3 -> III. Local-Only Operation
-	- Template placeholder 4 -> IV. Clear Observability
-	- Template placeholder 5 -> V. Tested Command Contracts
-- Added sections: None
+- Version: 0.1.0 → 0.2.0
+- Modified principles: None
+- Added sections:
+	- Project Overview (describes implemented TUI functionality and scope)
 - Removed sections: None
 - Templates requiring updates:
-	- .specify/templates/plan-template.md ✅ unchanged
-	- .specify/templates/spec-template.md ✅ unchanged
-	- .specify/templates/tasks-template.md ✅ updated
-	- .specify/templates/commands/*.md ⚠ not found
-- Deferred TODOs: None (resolved 2026-02-11)
+	- .specify/templates/plan-template.md ✅ unchanged (constitution checks already present)
+	- .specify/templates/spec-template.md ✅ unchanged (user scenarios align with principles)
+	- .specify/templates/tasks-template.md ✅ unchanged (test requirements align with Principle V)
+	- .specify/templates/commands/*.md ✅ N/A (no command files present in repository)
+- Deferred TODOs: None
+- Amendment rationale: Added Project Overview section to document implemented scope
+  and capabilities now that spec 001-apple-container-tui is complete. This provides
+  context for governance decisions and ensures future amendments reference a clear
+  baseline of what the project does.
 -->
 # Container TUI Constitution
+
+## Project Overview
+
+**Container TUI** is a keyboard-first terminal user interface for managing Apple
+Container operations on macOS 26.x (Apple Silicon). It provides a command-safe
+wrapper around the Apple Container CLI, enabling developers to perform container
+lifecycle operations, image management, and daemon control without memorizing
+command syntax.
+
+### Implemented Capabilities
+
+The TUI implements the following workflows as defined in spec `001-apple-container-tui`:
+
+- **Container Lifecycle**: List containers with status; start, stop, and delete
+  containers with command previews and confirmations for destructive actions.
+- **Image Operations**: Pull images by reference; build images from Containerfile
+  or Dockerfile with auto-detection and progress feedback.
+- **Daemon Management**: Start and stop the Apple Container daemon with safety
+  confirmations and status visibility.
+- **Safety Features**: Dry-run mode for all operations; command preview before
+  execution; type-to-confirm for destructive actions; JSONL command logging with
+  automatic rotation.
+
+### Scope Boundaries
+
+- **In Scope**: Local Apple Container CLI wrapper with keyboard navigation,
+  command safety, and observability.
+- **Out of Scope**: Remote container management, cloud integrations, telemetry,
+  multi-platform support (Windows/Linux), container orchestration (Kubernetes),
+  container networking configuration, volume management beyond CLI defaults.
+
+This overview serves as the baseline for all governance and amendment decisions.
 
 ## Core Principles
 
@@ -69,4 +101,4 @@ and delete flows against a local Apple Container environment when feasible.
 - Exceptions require written justification in the implementation plan's
 	Complexity Tracking section.
 
-**Version**: 0.1.0 | **Ratified**: 2026-02-11 | **Last Amended**: 2026-02-11
+**Version**: 0.2.0 | **Ratified**: 2026-02-11 | **Last Amended**: 2026-02-11
