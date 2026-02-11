@@ -1,0 +1,7 @@
+# Default configuration for apple-tui
+
+default_build_file = "Containerfile"
+confirm_destructive_actions = true
+theme_mode = "auto"
+refresh_on_focus = false
+log_retention_days = 7
