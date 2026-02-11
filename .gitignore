@@ -1,25 +1,55 @@
-# Go build artifacts
-bin/
+# Binaries for programs and plugins
 *.exe
 *.exe~
 *.dll
 *.so
 *.dylib
-*.test
-*.out
 
-# Go tooling
-vendor/
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+coverage.html
 coverage.out
 
-# IDE/editor
+# Go workspace file
+go.work
+
+# Dependency directories
+vendor/
+
+# Build output
+apple-tui
+/cmd/apple-tui/apple-tui
+/dist/
+/build/
+bin/
+
+# IDE and editor files
 .vscode/
 .idea/
+*.swp
+*.swo
+*~
 
-# OS junk
+# Application config and logs (user-specific)
+*.log
+command.log
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Environment files
+.env
+.env.local
+
+# macOS
 .DS_Store
+.AppleDouble
+.LSOverride
+._*
 Thumbs.db
 
-# Temp files
-*.tmp
-*.swp

@@ -7,6 +7,23 @@ operations on macOS. It lets you list containers, start/stop/delete them,
 pull images, build from Containerfiles, and manage the daemon with safe command
 previews and confirmations.
 
+**This repository was created as a proof-of-concept to test and document the
+capabilities of spec-kit, a structured software development workflow. The full
+process and insights will be documented on [www.msbiro.net](https://www.msbiro.net).**
+
+### Development Process
+
+This project demonstrates a hybrid AI-assisted development approach:
+
+- **Specification Phase**: All spec-kit artifacts (plan, spec, tasks, data model,
+  contracts) were created using Claude Sonnet 4.5
+- **Implementation Phase**: Code implementation was performed using GPT-5.2-codex
+- **Validation Phase**: Final testing, validation, and project oversight by the
+  author
+
+This workflow showcases how different AI models can be leveraged for their
+strengths across different phases of software development.
+
 ## Features
 
 - Container list with start/stop and refresh
@@ -22,7 +39,7 @@ previews and confirmations.
 ### Prerequisites
 
 - macOS 26.x on Apple Silicon
-- Apple Container CLI installed and in PATH
+- Apple Container CLI installed and in PATH (tested with version 0.9.0)
 - Go 1.21+ if building from source
 
 Verify the CLI is available:
@@ -101,4 +118,6 @@ go test ./...
 
 ## License
 
-TBD.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
+for details. You are free to use, modify, and distribute this software with
+proper attribution to the original author.
