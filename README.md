@@ -34,6 +34,24 @@ strengths across different phases of software development.
 - Dry-run mode for safe practice
 - JSONL command logs with rotation
 
+## Interface
+
+The TUI provides a clean, keyboard-driven interface for container management:
+
+```
+Containers
+
+> buildkit [stopped] ghcr.io/apple/container-builder-shim/builder:0.7.0
+  cba13176-5dae-497f-a74b-381671056c3b [stopped] markitdown:latest
+  17007fa5-710a-4ac2-98e0-7923cb26153f [stopped] docker.io/library/ubuntu:latest
+  808552b9-d78e-4448-a691-927c3848b4b5 [stopped] docker.io/library/ubuntu:latest
+
+Keys: up/down, enter=toggle, s=start, t=stop, d=delete(!), r=refresh, p=pull, b=build, m=manage, ?=help, q=quit
+```
+
+All operations show command previews before execution, and destructive actions
+require explicit confirmation for safety.
+
 ## Installation
 
 ### Prerequisites
