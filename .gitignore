@@ -45,6 +45,7 @@ temp/
 # Environment files
 .env
 .env.local
+.env*
 
 # macOS
 .DS_Store

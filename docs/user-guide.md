@@ -45,7 +45,7 @@ Dry-run mode (preview only, no execution):
 Main keys:
 
 - `up/down` or `j/k` to move
-- `enter` to toggle start/stop on containers
+- `enter` to open submenu on selected item
 - `q` to quit
 - `?` for help
 
@@ -53,8 +53,9 @@ Main keys:
 
 1. Launch `./actui`
 2. Use arrow keys to select a container
-3. Press `s` to start, `t` to stop, or `enter` to toggle
-4. Confirm the command preview
+3. Press `enter` to open the container submenu
+4. Choose `Start container`, `Stop container`, `Tail container log`, or `Enter container`
+5. Confirm command previews where applicable
 
 ASCII screenshot:
 
@@ -65,7 +66,7 @@ ASCII screenshot:
 | > web-api [stopped] nginx:latest                     |
 |   worker  [running] alpine:latest                    |
 |                                                      |
-| Keys: up/down, enter=toggle, s=start, t=stop, ...    |
+| Keys: up/down, enter=submenu, s=start, t=stop, ...   |
 |                                                      |
 | Command Preview                                      |
 |                                                      |
@@ -75,33 +76,42 @@ ASCII screenshot:
 +------------------------------------------------------+
 ```
 
-## Workflow: Pull an Image
+## Workflow: Image Management (List, Pull, Build, Prune)
 
-1. Press `p` from the main screen
-2. Enter the image reference
-3. Confirm the preview to start pulling
+1. Press `i` from the main screen to open image list
+2. Press `p` to pull, `b` to build, or `n` to prune unused images
+3. For prune, type `prune` to confirm
+4. Image list refreshes automatically after operations
 
 ASCII screenshot:
 
 ```
 +------------------------------------------------------+
-| Pull Image                                           |
+| Images                                               |
 |                                                      |
-| Image reference: nginx:latest                        |
+| > ubuntu                     latest   sha256:abc...  |
+|   alpine                     latest   sha256:def...  |
 |                                                      |
-| Progress: [===========                  ]            |
+| Keys: up/down, enter=submenu, p=pull, b=build, n=prune |
 |                                                      |
 | Command Preview                                      |
 |                                                      |
-| container image pull nginx:latest                    |
+| container image list                                 |
 |                                                      |
 | Confirm (y/n)                                        |
 +------------------------------------------------------+
 ```
 
+## Workflow: Image Inspect/Delete
+
+1. Open image list with `i`
+2. Select image and press `enter`
+3. Choose `Inspect image` to view metadata or `Delete image` to remove it
+4. For delete, type `delete` to confirm
+
 ## Workflow: Build from Containerfile/Dockerfile
 
-1. Press `b` from the main screen
+1. Press `i` from the main screen, then `b` in image list
 2. Select a build file in the file picker
 3. Enter a tag
 4. Confirm the preview to build
