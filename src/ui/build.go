@@ -19,18 +19,19 @@ type buildResultMsg struct {
 
 // BuildScreen builds an image from a selected file.
 type BuildScreen struct {
-	executor services.CommandExecutor
-	filePath string
-	context  string
-	input    textinput.Model
-	preview  *CommandPreviewModal
-	loading  bool
-	errorMsg string
-	result   *models.Result
-	viewport viewport.Model
-	progress ProgressModel
-	width    int
-	height   int
+	executor     services.CommandExecutor
+	returnTarget ActiveScreen
+	filePath     string
+	context      string
+	input        textinput.Model
+	preview      *CommandPreviewModal
+	loading      bool
+	errorMsg     string
+	result       *models.Result
+	viewport     viewport.Model
+	progress     ProgressModel
+	width        int
+	height       int
 }
 
 // NewBuildScreen creates the build screen.
@@ -42,13 +43,20 @@ func NewBuildScreen(executor services.CommandExecutor, filePath string) BuildScr
 
 	viewportModel := viewport.New(0, 0)
 	return BuildScreen{
-		executor: executor,
-		filePath: filePath,
-		context:  filepath.Dir(filePath),
-		input:    input,
-		viewport: viewportModel,
-		progress: NewProgressModel(),
+		executor:     executor,
+		returnTarget: ScreenContainerList,
+		filePath:     filePath,
+		context:      filepath.Dir(filePath),
+		input:        input,
+		viewport:     viewportModel,
+		progress:     NewProgressModel(),
 	}
+}
+
+// SetReturnTarget sets the screen to return to for Esc and post-success flow.
+func (m BuildScreen) SetReturnTarget(target ActiveScreen) BuildScreen {
+	m.returnTarget = target
+	return m
 }
 
 // Init starts the tag input.
@@ -68,10 +76,18 @@ func (m BuildScreen) Update(msg tea.Msg) (BuildScreen, tea.Cmd) {
 		m.loading = false
 		if message.err != nil {
 			m.errorMsg = services.FormatError(message.err, message.result.Stderr)
+			m.result = &message.result
+			m.viewport.SetContent(RenderResult(message.result))
+			m.progress.SetPercent(1)
+			return m, nil
 		}
 		m.result = &message.result
 		m.viewport.SetContent(RenderResult(message.result))
 		m.progress.SetPercent(1)
+		if m.returnTarget != ScreenContainerList {
+			target := m.returnTarget
+			return m, func() tea.Msg { return screenChangeMsg{target: target} }
+		}
 		return m, nil
 	case tea.KeyMsg:
 		if m.preview != nil {
@@ -91,7 +107,7 @@ func (m BuildScreen) Update(msg tea.Msg) (BuildScreen, tea.Cmd) {
 
 		switch message.String() {
 		case "esc":
-			return m, func() tea.Msg { return screenChangeMsg{target: ScreenContainerList} }
+			return m, func() tea.Msg { return BackToListMsg{} }
 		case "?":
 			return m, func() tea.Msg { return screenChangeMsg{target: ScreenHelp} }
 		case "enter":

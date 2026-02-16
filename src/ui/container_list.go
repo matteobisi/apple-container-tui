@@ -109,10 +109,8 @@ func (m ContainerListScreen) Update(msg tea.Msg) (ContainerListScreen, tea.Cmd) 
 		case "r":
 			m.loading = true
 			return m, m.fetchContainersCmd(true)
-		case "p":
-			return m, func() tea.Msg { return screenChangeMsg{target: ScreenImagePull} }
-		case "b":
-			return m, func() tea.Msg { return screenChangeMsg{target: ScreenFilePicker} }
+		case "i":
+			return m, func() tea.Msg { return screenChangeMsg{target: ScreenImageList, push: true} }
 		case "m":
 			return m, func() tea.Msg { return screenChangeMsg{target: ScreenDaemonControl} }
 		case "?":
@@ -127,8 +125,14 @@ func (m ContainerListScreen) Update(msg tea.Msg) (ContainerListScreen, tea.Cmd) 
 			updated, cmd := m.buildAndPreviewStop()
 			return updated, cmd
 		case "enter":
-			updated, cmd := m.buildAndPreviewToggle()
-			return updated, cmd
+			selected, ok := m.selectedContainer()
+			if !ok {
+				return m, nil
+			}
+			containerCopy := selected
+			return m, func() tea.Msg {
+				return screenChangeMsg{target: ScreenContainerSubmenu, container: &containerCopy, push: true}
+			}
 		}
 	}
 
@@ -162,7 +166,7 @@ func (m ContainerListScreen) View() string {
 		}
 	}
 
-	builder.WriteString("\n" + RenderMuted("Keys: up/down, enter=toggle, s=start, t=stop, d=delete(!), r=refresh, p=pull, b=build, m=manage, ?=help, q=quit") + "\n")
+	builder.WriteString("\n" + RenderMuted("Keys: up/down, enter=submenu, s=start, t=stop, d=delete(!), i=images, r=refresh, m=manage, ?=help, q=quit") + "\n")
 
 	if m.preview != nil {
 		builder.WriteString("\n")

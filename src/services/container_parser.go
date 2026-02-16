@@ -210,3 +210,49 @@ func parsePortMappings(value string) []models.PortMapping {
 
 	return ports
 }
+
+// ParseImageList parses `container image list` output into images.
+func ParseImageList(output string) ([]models.Image, error) {
+	lines := strings.Split(strings.TrimSpace(output), "\n")
+	if len(lines) == 0 || strings.TrimSpace(lines[0]) == "" {
+		return []models.Image{}, nil
+	}
+
+	headers := strings.Fields(lines[0])
+	indices := map[string]int{}
+	for i, header := range headers {
+		indices[strings.ToUpper(header)] = i
+	}
+
+	nameIndex, okName := indices["NAME"]
+	tagIndex, okTag := indices["TAG"]
+	digestIndex, okDigest := indices["DIGEST"]
+	if !okName || !okTag {
+		return nil, fmt.Errorf("missing required image headers")
+	}
+
+	images := make([]models.Image, 0)
+	for _, line := range lines[1:] {
+		if strings.TrimSpace(line) == "" {
+			continue
+		}
+		fields := strings.Fields(line)
+		if len(fields) <= tagIndex || len(fields) <= nameIndex {
+			continue
+		}
+
+		image := models.Image{
+			Name: fields[nameIndex],
+			Tag:  fields[tagIndex],
+		}
+		if okDigest && len(fields) > digestIndex {
+			image.Digest = fields[digestIndex]
+		}
+		if strings.TrimSpace(image.Tag) == "" {
+			image.Tag = "<none>"
+		}
+		images = append(images, image)
+	}
+
+	return images, nil
+}
