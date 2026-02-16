@@ -11,11 +11,12 @@ import (
 
 // FilePickerScreen allows selecting a build file.
 type FilePickerScreen struct {
-	executor services.CommandExecutor
-	picker   filepicker.Model
-	errorMsg string
-	width    int
-	height   int
+	executor     services.CommandExecutor
+	picker       filepicker.Model
+	returnTarget ActiveScreen
+	errorMsg     string
+	width        int
+	height       int
 }
 
 // NewFilePickerScreen creates a file picker screen.
@@ -23,7 +24,13 @@ func NewFilePickerScreen(executor services.CommandExecutor) FilePickerScreen {
 	picker := filepicker.New()
 	picker.AllowedTypes = []string{"Containerfile", "Dockerfile"}
 	picker.CurrentDirectory = "."
-	return FilePickerScreen{executor: executor, picker: picker}
+	return FilePickerScreen{executor: executor, picker: picker, returnTarget: ScreenContainerList}
+}
+
+// SetReturnTarget sets the screen to return to after flow completion/cancel.
+func (m FilePickerScreen) SetReturnTarget(target ActiveScreen) FilePickerScreen {
+	m.returnTarget = target
+	return m
 }
 
 // Init starts the file picker.
@@ -41,7 +48,7 @@ func (m FilePickerScreen) Update(msg tea.Msg) (FilePickerScreen, tea.Cmd) {
 	case tea.KeyMsg:
 		switch message.String() {
 		case "esc":
-			return m, func() tea.Msg { return screenChangeMsg{target: ScreenContainerList} }
+			return m, func() tea.Msg { return BackToListMsg{} }
 		case "?":
 			return m, func() tea.Msg { return screenChangeMsg{target: ScreenHelp} }
 		}
@@ -50,7 +57,8 @@ func (m FilePickerScreen) Update(msg tea.Msg) (FilePickerScreen, tea.Cmd) {
 	updatedPicker, cmd := m.picker.Update(msg)
 	m.picker = updatedPicker
 	if didSelect, path := m.picker.DidSelectFile(msg); didSelect {
-		return m, func() tea.Msg { return buildFileSelectedMsg{path: path} }
+		returnTarget := m.returnTarget
+		return m, func() tea.Msg { return buildFileSelectedMsg{path: path, returnTarget: returnTarget} }
 	}
 	if didSelect, path := m.picker.DidSelectDisabledFile(msg); didSelect {
 		m.errorMsg = "unsupported file: " + path

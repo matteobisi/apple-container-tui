@@ -17,14 +17,15 @@ type imagePullResultMsg struct {
 
 // ImagePullScreen collects image reference and runs pull.
 type ImagePullScreen struct {
-	executor services.CommandExecutor
-	input    textinput.Model
-	preview  *CommandPreviewModal
-	loading  bool
-	errorMsg string
-	result   *models.Result
-	progress ProgressModel
-	width    int
+	executor     services.CommandExecutor
+	returnTarget ActiveScreen
+	input        textinput.Model
+	preview      *CommandPreviewModal
+	loading      bool
+	errorMsg     string
+	result       *models.Result
+	progress     ProgressModel
+	width        int
 }
 
 // NewImagePullScreen creates the pull screen.
@@ -34,10 +35,17 @@ func NewImagePullScreen(executor services.CommandExecutor) ImagePullScreen {
 	input.Prompt = "Image reference: "
 	input.Focus()
 	return ImagePullScreen{
-		executor: executor,
-		input:    input,
-		progress: NewProgressModel(),
+		executor:     executor,
+		returnTarget: ScreenContainerList,
+		input:        input,
+		progress:     NewProgressModel(),
 	}
+}
+
+// SetReturnTarget sets the screen to return to for Esc and post-success flow.
+func (m ImagePullScreen) SetReturnTarget(target ActiveScreen) ImagePullScreen {
+	m.returnTarget = target
+	return m
 }
 
 // Init starts the text input.
@@ -54,9 +62,16 @@ func (m ImagePullScreen) Update(msg tea.Msg) (ImagePullScreen, tea.Cmd) {
 		m.loading = false
 		if message.err != nil {
 			m.errorMsg = services.FormatError(message.err, message.result.Stderr)
+			m.result = &message.result
+			m.progress.SetPercent(1)
+			return m, nil
 		}
 		m.result = &message.result
 		m.progress.SetPercent(1)
+		if m.returnTarget != ScreenContainerList {
+			target := m.returnTarget
+			return m, func() tea.Msg { return screenChangeMsg{target: target} }
+		}
 		return m, nil
 	case tea.KeyMsg:
 		if m.preview != nil {
@@ -76,7 +91,7 @@ func (m ImagePullScreen) Update(msg tea.Msg) (ImagePullScreen, tea.Cmd) {
 
 		switch message.String() {
 		case "esc":
-			return m, func() tea.Msg { return screenChangeMsg{target: ScreenContainerList} }
+			return m, func() tea.Msg { return BackToListMsg{} }
 		case "?":
 			return m, func() tea.Msg { return screenChangeMsg{target: ScreenHelp} }
 		case "enter":

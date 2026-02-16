@@ -26,9 +26,10 @@ strengths across different phases of software development.
 
 ## Features
 
-- Container list with start/stop and refresh
+- Container list with container action submenus (start/stop/logs/shell)
 - Safe delete with type-to-confirm
-- Image pull and build workflows
+- Image management screen (`i`) with list/pull/build/prune
+- Image submenu with inspect/delete
 - Daemon start/stop controls
 - Command preview before execution
 - Dry-run mode for safe practice
@@ -46,7 +47,7 @@ Containers
   17007fa5-710a-4ac2-98e0-7923cb26153f [stopped] docker.io/library/ubuntu:latest
   808552b9-d78e-4448-a691-927c3848b4b5 [stopped] docker.io/library/ubuntu:latest
 
-Keys: up/down, enter=toggle, s=start, t=stop, d=delete(!), r=refresh, p=pull, b=build, m=manage, ?=help, q=quit
+Keys: up/down, enter=submenu, s=start, t=stop, d=delete(!), i=images, r=refresh, m=manage, ?=help, q=quit
 ```
 
 All operations show command previews before execution, and destructive actions
@@ -90,8 +91,8 @@ Dry-run mode (preview only, no execution):
 Helpful keys:
 
 - `?` for help
-- `p` to pull an image
-- `b` to build an image
+- `i` to open image management
+- `p`/`b`/`n` for pull/build/prune inside image view
 - `m` to manage the daemon
 
 ## Configuration
