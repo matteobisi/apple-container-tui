@@ -1,20 +1,18 @@
 <!--
 Sync Impact Report
-- Version: 0.1.0 → 0.2.0
+- Version: 0.2.0 → 0.2.1
 - Modified principles: None
-- Added sections:
-	- Project Overview (describes implemented TUI functionality and scope)
+- Added sections: None
 - Removed sections: None
 - Templates requiring updates:
 	- .specify/templates/plan-template.md ✅ unchanged (constitution checks already present)
 	- .specify/templates/spec-template.md ✅ unchanged (user scenarios align with principles)
 	- .specify/templates/tasks-template.md ✅ unchanged (test requirements align with Principle V)
-	- .specify/templates/commands/*.md ✅ N/A (no command files present in repository)
+  - .specify/templates/commands/*.md ✅ N/A (directory not present in repository)
 - Deferred TODOs: None
-- Amendment rationale: Added Project Overview section to document implemented scope
-  and capabilities now that spec 001-apple-container-tui is complete. This provides
-  context for governance decisions and ensures future amendments reference a clear
-  baseline of what the project does.
+- Amendment rationale: Clarified implemented capabilities after completing
+  `002-refactor-menu-images` so governance decisions reflect current product
+  scope (submenu navigation, container logs/shell, image inspect/delete/prune).
 -->
 # Container TUI Constitution
 
@@ -28,12 +26,18 @@ command syntax.
 
 ### Implemented Capabilities
 
-The TUI implements the following workflows as defined in spec `001-apple-container-tui`:
+The TUI implements the following workflows as defined in specs
+`001-apple-container-tui` and `002-refactor-menu-images`:
 
-- **Container Lifecycle**: List containers with status; start, stop, and delete
-  containers with command previews and confirmations for destructive actions.
-- **Image Operations**: Pull images by reference; build images from Containerfile
-  or Dockerfile with auto-detection and progress feedback.
+- **Container Lifecycle**: List containers with status; open context submenus;
+  start, stop, and delete containers with command previews and confirmations for
+  destructive actions.
+- **Container Diagnostics & Access**: Tail container logs and enter containers
+  through interactive shell execution with shell auto-detection.
+- **Image Operations**: List local images; pull images by reference; build images
+  from Containerfile or Dockerfile with auto-detection and progress feedback.
+- **Image Details & Cleanup**: Inspect image metadata and delete/prune images
+  through guarded destructive-action flows.
 - **Daemon Management**: Start and stop the Apple Container daemon with safety
   confirmations and status visibility.
 - **Safety Features**: Dry-run mode for all operations; command preview before
@@ -101,4 +105,4 @@ and delete flows against a local Apple Container environment when feasible.
 - Exceptions require written justification in the implementation plan's
 	Complexity Tracking section.
 
-**Version**: 0.2.0 | **Ratified**: 2026-02-11 | **Last Amended**: 2026-02-11
+**Version**: 0.2.1 | **Ratified**: 2026-02-11 | **Last Amended**: 2026-02-16
