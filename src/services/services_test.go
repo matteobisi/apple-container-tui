@@ -261,7 +261,7 @@ func TestIsExactMatch(t *testing.T) {
 func TestConfigManagerLoad(t *testing.T) {
 	home := t.TempDir()
 	t.Setenv("HOME", home)
-	configPath := filepath.Join(home, ".config", "apple-tui", "config")
+	configPath := filepath.Join(home, ".config", "actui", "config")
 	if err := os.MkdirAll(filepath.Dir(configPath), 0o755); err != nil {
 		t.Fatalf("mkdir: %v", err)
 	}
@@ -302,7 +302,7 @@ func TestLogWriterWrite(t *testing.T) {
 	if err := writer.Write(entry); err != nil {
 		t.Fatalf("write: %v", err)
 	}
-	if _, err := os.Stat(filepath.Join(home, "Library", "Application Support", "apple-tui", "command.log")); err != nil {
+	if _, err := os.Stat(filepath.Join(home, "Library", "Application Support", "actui", "command.log")); err != nil {
 		t.Fatalf("expected log file: %v", err)
 	}
 }
@@ -314,7 +314,7 @@ func TestLogWriterRotate(t *testing.T) {
 	if err != nil {
 		t.Fatalf("log writer: %v", err)
 	}
-	logPath := filepath.Join(home, "Library", "Application Support", "apple-tui", "command.log")
+	logPath := filepath.Join(home, "Library", "Application Support", "actui", "command.log")
 	if err := os.MkdirAll(filepath.Dir(logPath), 0o755); err != nil {
 		t.Fatalf("mkdir: %v", err)
 	}

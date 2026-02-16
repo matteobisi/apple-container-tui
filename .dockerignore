@@ -1,0 +1,25 @@
+.git/
+.gitignore
+Dockerfile*
+.dockerignore
+
+# Logs and env
+*.log*
+.env*
+coverage/
+
+# Build outputs
+bin/
+build/
+dist/
+*.out
+*.test
+
+# Go dependencies
+vendor/
+
+# Editor/OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

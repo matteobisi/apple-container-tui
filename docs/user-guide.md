@@ -25,19 +25,19 @@ Build from source:
 
 ```bash
 go mod download
-go build -o apple-tui ./cmd/apple-tui
+go build -o actui ./cmd/actui
 ```
 
 ## Run
 
 ```bash
-./apple-tui
+./actui
 ```
 
 Dry-run mode (preview only, no execution):
 
 ```bash
-./apple-tui --dry-run
+./actui --dry-run
 ```
 
 ## Navigation
@@ -51,7 +51,7 @@ Main keys:
 
 ## Workflow: List and Start/Stop Containers
 
-1. Launch `./apple-tui`
+1. Launch `./actui`
 2. Use arrow keys to select a container
 3. Press `s` to start, `t` to stop, or `enter` to toggle
 4. Confirm the command preview
@@ -172,12 +172,12 @@ ASCII screenshot:
 
 Config is read from:
 
-- `~/.config/apple-tui/config`
-- `~/Library/Application Support/apple-tui/config`
+- `~/.config/actui/config`
+- `~/Library/Application Support/actui/config`
 
 Writes go to:
 
-- `~/Library/Application Support/apple-tui/config`
+- `~/Library/Application Support/actui/config`
 
 Example TOML:
 
@@ -191,7 +191,7 @@ log_retention_days = 7
 
 Logs are stored at:
 
-- `~/Library/Application Support/apple-tui/command.log`
+- `~/Library/Application Support/actui/command.log`
 
 ## Troubleshooting
 

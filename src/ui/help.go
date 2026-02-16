@@ -49,8 +49,8 @@ func (h HelpScreen) View() string {
 	builder.WriteString("\nDaemon:\n")
 	builder.WriteString("  m             - manage daemon\n")
 	builder.WriteString("\nPaths:\n")
-	builder.WriteString("  Config: ~/.config/apple-tui/config OR ~/Library/Application Support/apple-tui/config\n")
-	builder.WriteString("  Logs:   ~/Library/Application Support/apple-tui/command.log\n")
+	builder.WriteString("  Config: ~/.config/actui/config OR ~/Library/Application Support/actui/config\n")
+	builder.WriteString("  Logs:   ~/Library/Application Support/actui/command.log\n")
 	builder.WriteString("\n" + RenderMuted("Press ? or esc to return") + "\n")
 	return builder.String()
 }
