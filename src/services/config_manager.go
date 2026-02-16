@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 
 	"container-tui/src/models"
+
 	"github.com/spf13/viper"
 )
 
@@ -22,10 +23,10 @@ func NewConfigManager() (*ConfigManager, error) {
 	}
 
 	readPaths := []string{
-		filepath.Join(home, ".config", "apple-tui", "config"),
-		filepath.Join(home, "Library", "Application Support", "apple-tui", "config"),
+		filepath.Join(home, ".config", "actui", "config"),
+		filepath.Join(home, "Library", "Application Support", "actui", "config"),
 	}
-	writePath := filepath.Join(home, "Library", "Application Support", "apple-tui", "config")
+	writePath := filepath.Join(home, "Library", "Application Support", "actui", "config")
 
 	return &ConfigManager{ReadPaths: readPaths, WritePath: writePath}, nil
 }

@@ -35,7 +35,7 @@ func NewLogWriter(retentionDays int) (*LogWriter, error) {
 	if err != nil {
 		return nil, err
 	}
-	logPath := filepath.Join(home, "Library", "Application Support", "apple-tui", "command.log")
+	logPath := filepath.Join(home, "Library", "Application Support", "actui", "command.log")
 	return &LogWriter{path: logPath, retentionDays: retentionDays}, nil
 }
 

@@ -18,7 +18,7 @@ func main() {
 	var dryRun bool
 
 	rootCmd := &cobra.Command{
-		Use:   "apple-tui",
+		Use:   "actui",
 		Short: "Apple Container TUI",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := services.CheckCLI(context.Background()); err != nil {
@@ -74,7 +74,7 @@ func main() {
 	rootCmd.Flags().BoolVar(&dryRun, "dry-run", false, "preview commands without executing")
 
 	rootCmd.Version = version
-	rootCmd.SetVersionTemplate("apple-tui version {{.Version}}\n")
+	rootCmd.SetVersionTemplate("actui version {{.Version}}\n")
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, err)

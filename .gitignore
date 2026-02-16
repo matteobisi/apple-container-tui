@@ -20,8 +20,8 @@ go.work
 vendor/
 
 # Build output
-apple-tui
-/cmd/apple-tui/apple-tui
+actui
+/cmd/actui/actui
 /dist/
 /build/
 bin/

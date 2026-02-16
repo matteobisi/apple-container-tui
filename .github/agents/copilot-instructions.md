@@ -3,6 +3,7 @@
 Auto-generated from all feature plans. Last updated: 2026-02-11
 
 ## Active Technologies
+- Local filesystem (config.toml, JSONL logs) (001-rename-binary-actui)
 
 - Go 1.21+ (chosen for optimal balance of productivity, performance, binary distribution, and TUI library maturity) + Bubbletea v1.2.4 (TUI framework), Lipgloss v1.0.0 (styling), Bubbles v0.20.0 (UI components), Cobra (CLI), Viper (config management) (001-apple-container-tui)
 
@@ -22,6 +23,7 @@ tests/
 Go 1.21+ (chosen for optimal balance of productivity, performance, binary distribution, and TUI library maturity): Follow standard conventions
 
 ## Recent Changes
+- 001-rename-binary-actui: Added Go 1.21
 
 - 001-apple-container-tui: Added Go 1.21+ (chosen for optimal balance of productivity, performance, binary distribution, and TUI library maturity) + Bubbletea v1.2.4 (TUI framework), Lipgloss v1.0.0 (styling), Bubbles v0.20.0 (UI components), Cobra (CLI), Viper (config management)
 

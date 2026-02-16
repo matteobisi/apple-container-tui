@@ -70,7 +70,7 @@ container system version
 
 ```bash
 go mod download
-go build -o apple-tui ./cmd/apple-tui
+go build -o actui ./cmd/actui
 ```
 
 ## Quick Start
@@ -78,13 +78,13 @@ go build -o apple-tui ./cmd/apple-tui
 Launch the TUI:
 
 ```bash
-./apple-tui
+./actui
 ```
 
 Dry-run mode (preview only, no execution):
 
 ```bash
-./apple-tui --dry-run
+./actui --dry-run
 ```
 
 Helpful keys:
@@ -98,12 +98,12 @@ Helpful keys:
 
 Config is read from:
 
-- `~/.config/apple-tui/config`
-- `~/Library/Application Support/apple-tui/config`
+- `~/.config/actui/config`
+- `~/Library/Application Support/actui/config`
 
 Writes go to:
 
-- `~/Library/Application Support/apple-tui/config`
+- `~/Library/Application Support/actui/config`
 
 Example TOML:
 
@@ -117,7 +117,7 @@ log_retention_days = 7
 
 Logs are stored at:
 
-- `~/Library/Application Support/apple-tui/command.log`
+- `~/Library/Application Support/actui/command.log`
 
 ## Development
 
