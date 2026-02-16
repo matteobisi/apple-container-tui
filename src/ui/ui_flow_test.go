@@ -86,7 +86,7 @@ func TestImagePullEscHelp(t *testing.T) {
 	}
 	_, cmd = screen.Update(tea.KeyMsg{Type: tea.KeyEscape})
 	msg = cmd()
-	if change, ok := msg.(screenChangeMsg); !ok || change.target != ScreenContainerList {
+	if _, ok := msg.(BackToListMsg); !ok {
 		t.Fatalf("unexpected message")
 	}
 }

@@ -27,8 +27,7 @@ func TestFilePickerEsc(t *testing.T) {
 		t.Fatalf("expected command")
 	}
 	msg := cmd()
-	change, ok := msg.(screenChangeMsg)
-	if !ok || change.target != ScreenContainerList {
+	if _, ok := msg.(BackToListMsg); !ok {
 		t.Fatalf("unexpected message: %#v", msg)
 	}
 }
