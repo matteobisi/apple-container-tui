@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"os/exec"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -10,8 +11,12 @@ import (
 )
 
 type containerShellFinishedMsg struct {
-	result models.Result
-	err    error
+	err error
+}
+
+type containerShellDetectedMsg struct {
+	shell string
+	err   error
 }
 
 // ContainerShellScreen detects shell and executes interactive container shell command.
@@ -40,20 +45,46 @@ func (m ContainerShellScreen) Init() tea.Cmd {
 	if strings.TrimSpace(m.container.ID) == "" {
 		return nil
 	}
-	return m.executeShellCmd()
+	return m.detectShellCmd()
 }
 
 func (m ContainerShellScreen) Update(msg tea.Msg) (ContainerShellScreen, tea.Cmd) {
 	switch message := msg.(type) {
+	case containerShellDetectedMsg:
+		if message.err != nil {
+			m.loading = false
+			m.errorMsg = services.FormatError(message.err, "")
+			m.statusMessage = "Shell unavailable."
+			return m, nil
+		}
+
+		builder := services.ContainerExecBuilder{ContainerName: m.container.ID, Shell: message.shell}
+		command, err := builder.Build()
+		if err != nil {
+			m.loading = false
+			m.errorMsg = err.Error()
+			m.statusMessage = "Shell unavailable."
+			return m, nil
+		}
+
+		execCmd := exec.Command(command.Executable, command.Args...)
+		m.statusMessage = "Starting interactive shell..."
+		return m, tea.ExecProcess(execCmd, func(err error) tea.Msg {
+			return containerShellFinishedMsg{err: err}
+		})
 	case containerShellFinishedMsg:
 		m.loading = false
 		if message.err != nil {
-			m.errorMsg = services.FormatError(message.err, message.result.Stderr)
+			m.errorMsg = services.FormatError(message.err, "")
 			m.statusMessage = "Shell unavailable."
+			return m, nil
 		} else {
 			m.statusMessage = "Shell session completed."
+			containerCopy := m.container
+			return m, func() tea.Msg {
+				return screenChangeMsg{target: ScreenContainerSubmenu, container: &containerCopy}
+			}
 		}
-		return m, nil
 	case tea.KeyMsg:
 		switch message.String() {
 		case "esc":
@@ -81,18 +112,12 @@ func (m ContainerShellScreen) View() string {
 	return builder.String()
 }
 
-func (m ContainerShellScreen) executeShellCmd() tea.Cmd {
+func (m ContainerShellScreen) detectShellCmd() tea.Cmd {
 	return func() tea.Msg {
 		shell, err := m.detector.DetectShell(m.container.ID)
 		if err != nil {
-			return containerShellFinishedMsg{err: err}
+			return containerShellDetectedMsg{err: err}
 		}
-		builder := services.ContainerExecBuilder{ContainerName: m.container.ID, Shell: shell}
-		cmd, err := builder.Build()
-		if err != nil {
-			return containerShellFinishedMsg{err: err}
-		}
-		result, err := m.executor.Execute(cmd)
-		return containerShellFinishedMsg{result: result, err: err}
+		return containerShellDetectedMsg{shell: shell}
 	}
 }
