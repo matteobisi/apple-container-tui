@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 
 	"container-tui/src/models"
 	"container-tui/src/services"
@@ -21,6 +22,7 @@ type ImageSubmenuScreen struct {
 	cursor   int
 	errorMsg string
 	confirm  *TypeToConfirmModal
+	width    int
 }
 
 func NewImageSubmenuScreen(executor services.CommandExecutor) ImageSubmenuScreen {
@@ -39,6 +41,9 @@ func (m ImageSubmenuScreen) Init() tea.Cmd { return nil }
 
 func (m ImageSubmenuScreen) Update(msg tea.Msg) (ImageSubmenuScreen, tea.Cmd) {
 	switch message := msg.(type) {
+	case tea.WindowSizeMsg:
+		m.width = message.Width
+		return m, nil
 	case imageSubmenuActionMsg:
 		if message.err != nil {
 			m.errorMsg = services.FormatError(message.err, message.result.Stderr)
@@ -94,18 +99,40 @@ func (m ImageSubmenuScreen) View() string {
 	options := []string{"Inspect image", "Delete image", "Back"}
 	builder := strings.Builder{}
 	builder.WriteString(RenderTitle("Image Actions") + "\n\n")
-	builder.WriteString(RenderMuted("Image: "+m.image.Reference()) + "\n\n")
-	for i, option := range options {
-		cursor := " "
-		if i == m.cursor {
-			cursor = ">"
-		}
-		line := cursor + " " + option
-		if i == m.cursor {
-			line = RenderAccent(line)
-		}
-		builder.WriteString(line + "\n")
+
+	// Image Details section with bold header
+	headerStyle := lipgloss.NewStyle().Bold(true)
+	builder.WriteString(headerStyle.Render("Image Details") + "\n")
+	builder.WriteString("repository: " + m.image.Name + "\n")
+	builder.WriteString("tag: " + m.image.Tag + "\n")
+	builder.WriteString("digest: " + m.image.Digest + "\n")
+	builder.WriteString("\n")
+
+	// Horizontal separator
+	width := m.width
+	if width == 0 {
+		width = 80
 	}
+	builder.WriteString(strings.Repeat("─", width) + "\n\n")
+
+	// Available Actions section with bold header
+	builder.WriteString(headerStyle.Render("Available Actions") + "\n")
+
+	// Action items with inverse video selection
+	normalStyle := lipgloss.NewStyle()
+	selectedStyle := lipgloss.NewStyle().Reverse(true)
+	for i, option := range options {
+		style := normalStyle
+		if i == m.cursor {
+			style = selectedStyle
+		}
+		builder.WriteString(style.Render(option) + "\n")
+	}
+	builder.WriteString("\n")
+
+	// Horizontal separator after actions
+	builder.WriteString(strings.Repeat("─", width) + "\n\n")
+
 	if m.errorMsg != "" {
 		builder.WriteString("\n" + RenderError("Error: "+m.errorMsg) + "\n")
 	}

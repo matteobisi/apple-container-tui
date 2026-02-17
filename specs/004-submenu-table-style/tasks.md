@@ -22,8 +22,8 @@
 
 **Purpose**: Verify environment and dependencies
 
-- [ ] T001 Verify Go 1.21+ installed and Bubbletea v1.2.4 + Lipgloss v1.0.0 in go.mod
-- [ ] T002 Review Feature 003 styling patterns in src/ui/table.go and src/ui/container_list.go for reference
+- [X] T001 Verify Go 1.21+ installed and Bubbletea v1.2.4 + Lipgloss v1.0.0 in go.mod
+- [X] T002 Review Feature 003 styling patterns in src/ui/table.go and src/ui/container_list.go for reference
 
 **Checkpoint**: Environment ready, styling patterns understood
 
@@ -37,14 +37,14 @@
 
 ### Implementation for User Story 1
 
-- [ ] T003 [US1] Add width field (int) to ContainerSubmenuScreen struct in src/ui/container_submenu.go
-- [ ] T004 [US1] Add WindowSizeMsg handler to Update() method in src/ui/container_submenu.go to store terminal width
-- [ ] T005 [US1] Refactor View() method in src/ui/container_submenu.go: Add bold "Container Details" header before container info section
-- [ ] T006 [US1] Refactor View() method in src/ui/container_submenu.go: Add horizontal separator (strings.Repeat("─", m.width)) after container info with blank lines before/after
-- [ ] T007 [US1] Refactor View() method in src/ui/container_submenu.go: Add bold "Available Actions" header before action list
-- [ ] T008 [US1] Refactor View() method in src/ui/container_submenu.go: Replace cursor prefix pattern with inverse video selection (lipgloss.NewStyle().Reverse(true)) for action items
-- [ ] T009 [US1] Refactor View() method in src/ui/container_submenu.go: Add horizontal separator after action list with blank lines before/after
-- [ ] T010 [US1] Manual test: Build application (go build -o actui cmd/actui/main.go) and verify container submenu displays correctly
+- [X] T003 [US1] Add width field (int) to ContainerSubmenuScreen struct in src/ui/container_submenu.go
+- [X] T004 [US1] Add WindowSizeMsg handler to Update() method in src/ui/container_submenu.go to store terminal width
+- [X] T005 [US1] Refactor View() method in src/ui/container_submenu.go: Add bold "Container Details" header before container info section
+- [X] T006 [US1] Refactor View() method in src/ui/container_submenu.go: Add horizontal separator (strings.Repeat("─", m.width)) after container info with blank lines before/after
+- [X] T007 [US1] Refactor View() method in src/ui/container_submenu.go: Add bold "Available Actions" header before action list
+- [X] T008 [US1] Refactor View() method in src/ui/container_submenu.go: Replace cursor prefix pattern with inverse video selection (lipgloss.NewStyle().Reverse(true)) for action items
+- [X] T009 [US1] Refactor View() method in src/ui/container_submenu.go: Add horizontal separator after action list with blank lines before/after
+- [X] T010 [US1] Manual test: Build application (go build -o actui cmd/actui/main.go) and verify container submenu displays correctly
 
 **Checkpoint**: Container submenu fully styled with bold headers, separators, and inverse video selection - User Story 1 complete
 
@@ -58,14 +58,14 @@
 
 ### Implementation for User Story 2
 
-- [ ] T011 [P] [US2] Add width field (int) to ImageSubmenuScreen struct in src/ui/image_submenu.go
-- [ ] T012 [P] [US2] Add WindowSizeMsg handler to Update() method in src/ui/image_submenu.go to store terminal width
-- [ ] T013 [US2] Refactor View() method in src/ui/image_submenu.go: Add bold "Image Details" header before image info section
-- [ ] T014 [US2] Refactor View() method in src/ui/image_submenu.go: Add horizontal separator (strings.Repeat("─", m.width)) after image info with blank lines before/after
-- [ ] T015 [US2] Refactor View() method in src/ui/image_submenu.go: Add bold "Available Actions" header before action list
-- [ ] T016 [US2] Refactor View() method in src/ui/image_submenu.go: Replace cursor prefix pattern with inverse video selection for action items
-- [ ] T017 [US2] Refactor View() method in src/ui/image_submenu.go: Add horizontal separator after action list with blank lines before/after
-- [ ] T018 [US2] Manual test: Navigate to image submenu and verify visual consistency with container submenu styling
+- [X] T011 [P] [US2] Add width field (int) to ImageSubmenuScreen struct in src/ui/image_submenu.go
+- [X] T012 [P] [US2] Add WindowSizeMsg handler to Update() method in src/ui/image_submenu.go to store terminal width
+- [X] T013 [US2] Refactor View() method in src/ui/image_submenu.go: Add bold "Image Details" header before image info section
+- [X] T014 [US2] Refactor View() method in src/ui/image_submenu.go: Add horizontal separator (strings.Repeat("─", m.width)) after image info with blank lines before/after
+- [X] T015 [US2] Refactor View() method in src/ui/image_submenu.go: Add bold "Available Actions" header before action list
+- [X] T016 [US2] Refactor View() method in src/ui/image_submenu.go: Replace cursor prefix pattern with inverse video selection for action items
+- [X] T017 [US2] Refactor View() method in src/ui/image_submenu.go: Add horizontal separator after action list with blank lines before/after
+- [X] T018 [US2] Manual test: Navigate to image submenu and verify visual consistency with container submenu styling
 
 **Checkpoint**: Image submenu fully styled - User Story 2 complete
 
@@ -79,17 +79,17 @@
 
 ### Implementation for User Story 3
 
-- [ ] T019 [US3] Add width field (int) to HelpScreen struct in src/ui/help.go if not present
-- [ ] T020 [US3] Add WindowSizeMsg handler to Update() method in src/ui/help.go if not present
-- [ ] T021 [US3] Refactor View() method in src/ui/help.go: Reorganize content into "Navigation" section with bold header
-- [ ] T022 [US3] Refactor View() method in src/ui/help.go: Add horizontal separator after Navigation section
-- [ ] T023 [US3] Refactor View() method in src/ui/help.go: Reorganize content into "Container Actions" section with bold header
-- [ ] T024 [US3] Refactor View() method in src/ui/help.go: Add horizontal separator after Container Actions section
-- [ ] T025 [US3] Refactor View() method in src/ui/help.go: Reorganize content into "Image Actions" section with bold header
-- [ ] T026 [US3] Refactor View() method in src/ui/help.go: Add horizontal separator after Image Actions section
-- [ ] T027 [US3] Refactor View() method in src/ui/help.go: Reorganize content into "General" section with bold header
-- [ ] T028 [US3] Refactor View() method in src/ui/help.go: Add horizontal separator after General section
-- [ ] T029 [US3] Manual test: Open help screen and verify all 4 sections display with bold headers and separators
+- [X] T019 [US3] Add width field (int) to HelpScreen struct in src/ui/help.go if not present
+- [X] T020 [US3] Add WindowSizeMsg handler to Update() method in src/ui/help.go if not present
+- [X] T021 [US3] Refactor View() method in src/ui/help.go: Reorganize content into "Navigation" section with bold header
+- [X] T022 [US3] Refactor View() method in src/ui/help.go: Add horizontal separator after Navigation section
+- [X] T023 [US3] Refactor View() method in src/ui/help.go: Reorganize content into "Container Actions" section with bold header
+- [X] T024 [US3] Refactor View() method in src/ui/help.go: Add horizontal separator after Container Actions section
+- [X] T025 [US3] Refactor View() method in src/ui/help.go: Reorganize content into "Image Actions" section with bold header
+- [X] T026 [US3] Refactor View() method in src/ui/help.go: Add horizontal separator after Image Actions section
+- [X] T027 [US3] Refactor View() method in src/ui/help.go: Reorganize content into "General" section with bold header
+- [X] T028 [US3] Refactor View() method in src/ui/help.go: Add horizontal separator after General section
+- [X] T029 [US3] Manual test: Open help screen and verify all 4 sections display with bold headers and separators
 
 **Checkpoint**: Help screen reorganized with 4 sections, bold headers, and separators - User Story 3 complete
 
@@ -99,14 +99,14 @@
 
 **Purpose**: Optional enhancement and validation across all screens
 
-- [ ] T030 [P] Optional: Apply same styling to daemon control screen (src/ui/daemon_control.go) if it has submenu-like structure
-- [ ] T031 Build final binary (go build -o actui cmd/actui/main.go) and verify no compilation errors
-- [ ] T032 Execute validation checklist from specs/004-submenu-table-style/quickstart.md for all updated screens
-- [ ] T033 [P] Test terminal resize behavior: Verify separators adjust width dynamically in all updated screens
-- [ ] T034 [P] Test narrow terminal (80 chars): Verify layout remains readable in all updated screens
-- [ ] T035 Complete application walk-through: Navigate through main list → container submenu → back → images → image submenu → back → help screen, verify visual consistency
-- [ ] T036 [P] Update README.md with screenshots or examples of new submenu styling if applicable
-- [ ] T037 Create VALIDATION.md in specs/004-submenu-table-style/ documenting manual test results
+- [ ] T030 [P] Optional: Apply same styling to daemon control screen (src/ui/daemon_control.go) if it has submenu-like structure (DEFERRED - not applicable)
+- [X] T031 Build final binary (go build -o actui cmd/actui/main.go) and verify no compilation errors
+- [X] T032 Execute validation checklist from specs/004-submenu-table-style/quickstart.md for all updated screens
+- [X] T033 [P] Test terminal resize behavior: Verify separators adjust width dynamically in all updated screens
+- [X] T034 [P] Test narrow terminal (80 chars): Verify layout remains readable in all updated screens
+- [X] T035 Complete application walk-through: Navigate through main list → container submenu → back → images → image submenu → back → help screen, verify visual consistency
+- [ ] T036 [P] Update README.md with screenshots or examples of new submenu styling if applicable (DEFERRED - optional)
+- [X] T037 Create VALIDATION.md in specs/004-submenu-table-style/ documenting manual test results
 
 **Checkpoint**: All screens styled consistently, validated, and documented
 
