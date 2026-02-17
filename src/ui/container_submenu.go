@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 
 	"container-tui/src/models"
 	"container-tui/src/services"
@@ -29,6 +30,7 @@ type ContainerSubmenuScreen struct {
 	errorMsg  string
 	result    *models.Result
 	preview   *CommandPreviewModal
+	width     int
 }
 
 func NewContainerSubmenuScreen(executor services.CommandExecutor) ContainerSubmenuScreen {
@@ -49,6 +51,9 @@ func (m ContainerSubmenuScreen) Init() tea.Cmd { return nil }
 
 func (m ContainerSubmenuScreen) Update(msg tea.Msg) (ContainerSubmenuScreen, tea.Cmd) {
 	switch message := msg.(type) {
+	case tea.WindowSizeMsg:
+		m.width = message.Width
+		return m, nil
 	case containerSubmenuActionMsg:
 		m.loading = false
 		if message.err != nil {
@@ -128,18 +133,40 @@ func (m ContainerSubmenuScreen) Update(msg tea.Msg) (ContainerSubmenuScreen, tea
 func (m ContainerSubmenuScreen) View() string {
 	builder := strings.Builder{}
 	builder.WriteString(RenderTitle("Container Actions") + "\n\n")
-	builder.WriteString(RenderMuted("Container: "+m.container.Name+" ("+string(m.container.Status)+")") + "\n\n")
-	for i, option := range m.options {
-		cursor := " "
-		if i == m.cursor {
-			cursor = ">"
-		}
-		line := cursor + " " + option.label
-		if i == m.cursor {
-			line = RenderAccent(line)
-		}
-		builder.WriteString(line + "\n")
+
+	// Container Details section with bold header
+	headerStyle := lipgloss.NewStyle().Bold(true)
+	builder.WriteString(headerStyle.Render("Container Details") + "\n")
+	builder.WriteString("name: " + m.container.Name + "\n")
+	builder.WriteString("status: " + string(m.container.Status) + "\n")
+	builder.WriteString("image: " + m.container.Image + "\n")
+	builder.WriteString("\n")
+
+	// Horizontal separator
+	width := m.width
+	if width == 0 {
+		width = 80
 	}
+	builder.WriteString(strings.Repeat("─", width) + "\n\n")
+
+	// Available Actions section with bold header
+	builder.WriteString(headerStyle.Render("Available Actions") + "\n")
+
+	// Action items with inverse video selection
+	normalStyle := lipgloss.NewStyle()
+	selectedStyle := lipgloss.NewStyle().Reverse(true)
+	for i, option := range m.options {
+		style := normalStyle
+		if i == m.cursor {
+			style = selectedStyle
+		}
+		builder.WriteString(style.Render(option.label) + "\n")
+	}
+	builder.WriteString("\n")
+
+	// Horizontal separator after actions
+	builder.WriteString(strings.Repeat("─", width) + "\n\n")
+
 	if m.loading {
 		builder.WriteString("\n" + RenderMuted("Running action...") + "\n")
 	}
