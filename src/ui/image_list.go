@@ -24,6 +24,7 @@ type ImageListScreen struct {
 	executor services.CommandExecutor
 	images   []models.Image
 	cursor   int
+	width    int
 	loading  bool
 	errorMsg string
 	result   *models.Result
@@ -41,6 +42,9 @@ func (m ImageListScreen) Init() tea.Cmd {
 
 func (m ImageListScreen) Update(msg tea.Msg) (ImageListScreen, tea.Cmd) {
 	switch message := msg.(type) {
+	case tea.WindowSizeMsg:
+		m.width = message.Width
+		return m, nil
 	case imageListLoadedMsg:
 		m.loading = false
 		if message.err != nil {
@@ -121,26 +125,33 @@ func (m ImageListScreen) View() string {
 	if m.loading {
 		builder.WriteString(RenderMuted("Loading images...") + "\n")
 	}
-	if len(m.images) == 0 {
-		builder.WriteString(RenderMuted("No images found. Press 'p' to pull an image or 'b' to build from Containerfile.") + "\n")
-	} else {
-		builder.WriteString("NAME\tTAG\tDIGEST\n")
+
+	// Render image table
+	table := NewTable([]TableColumn{
+		{Header: "Name", MinWidth: 10, Priority: 1, Align: "left"},
+		{Header: "Tag", MinWidth: 8, Priority: 2, Align: "left"},
+		{Header: "Digest", MinWidth: 12, Priority: 3, Align: "left"},
+	})
+
+	if len(m.images) > 0 {
+		rows := make([]TableRow, len(m.images))
 		for i, image := range m.images {
-			cursor := " "
-			if i == m.cursor {
-				cursor = ">"
+			rows[i] = TableRow{
+				Cells:    []string{image.Name, image.Tag, TruncateDigest(image.Digest)},
+				Selected: i == m.cursor,
+				Data:     &image,
 			}
-			digest := image.Digest
-			if len(digest) > 24 {
-				digest = digest[:24] + "..."
-			}
-			line := cursor + " " + image.Name + "\t" + image.Tag + "\t" + digest
-			if i == m.cursor {
-				line = RenderAccent(line)
-			}
-			builder.WriteString(line + "\n")
 		}
+		table.SetRows(rows)
 	}
+
+	// Use width for table rendering, fallback to 80 if not set
+	tableWidth := m.width
+	if tableWidth == 0 {
+		tableWidth = 80
+	}
+	builder.WriteString(table.Render(tableWidth, m.cursor))
+	builder.WriteString(strings.Repeat("─", tableWidth) + "\n")
 	if m.errorMsg != "" {
 		builder.WriteString("\n" + RenderError("Error: "+m.errorMsg) + "\n")
 	}
