@@ -37,18 +37,38 @@ strengths across different phases of software development.
 
 ## Interface
 
-The TUI provides a clean, keyboard-driven interface for container management:
+The TUI provides a clean, keyboard-driven interface with tabular layouts for easy scanning:
 
+**Container List View**:
 ```
 Containers
 
-> buildkit [stopped] ghcr.io/apple/container-builder-shim/builder:0.7.0
-  cba13176-5dae-497f-a74b-381671056c3b [stopped] markitdown:latest
-  17007fa5-710a-4ac2-98e0-7923cb26153f [stopped] docker.io/library/ubuntu:latest
-  808552b9-d78e-4448-a691-927c3848b4b5 [stopped] docker.io/library/ubuntu:latest
+Name                                             State      Base Image                                            
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────
+buildkit                                         stopped    ghcr.io/apple/container-builder-shim/builder:0.7.0
+cba13176-5dae-497f-a74b-381671056c3b             stopped    markitdown:latest
+17007fa5-710a-4ac2-98e0-7923cb26153f             stopped    docker.io/library/ubuntu:latest
+808552b9-d78e-4448-a691-927c3848b4b5             stopped    docker.io/library/ubuntu:latest
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
 Keys: up/down, enter=submenu, s=start, t=stop, d=delete(!), i=images, r=refresh, m=manage, ?=help, q=quit
 ```
+
+**Image List View**:
+```
+Images
+
+Name                                             Tag        Digest
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────
+docker.io/library/ubuntu                         latest     c2a6e3c0        
+markitdown                                       latest     8f3d91a2
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+Keys: up/down=navigate, enter=submenu, p=pull, b=build, n=image-prune, r=refresh, esc=back
+```
+
+The application launches in full-screen mode (alternate screen buffer), clearing the terminal
+for an immersive experience and restoring your previous terminal content on exit.
 
 All operations show command previews before execution, and destructive actions
 require explicit confirmation for safety.

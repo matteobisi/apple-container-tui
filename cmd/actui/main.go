@@ -62,7 +62,7 @@ func main() {
 				}
 			}
 
-			program := tea.NewProgram(ui.NewAppModel(executor, version))
+			program := tea.NewProgram(ui.NewAppModel(executor, version), tea.WithAltScreen())
 			if _, err := program.Run(); err != nil {
 				return err
 			}

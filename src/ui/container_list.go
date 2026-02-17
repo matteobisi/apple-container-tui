@@ -2,7 +2,6 @@ package ui
 
 import (
 	"errors"
-	"fmt"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -26,6 +25,7 @@ type ContainerListScreen struct {
 	executor   services.CommandExecutor
 	containers []models.Container
 	cursor     int
+	width      int
 	loading    bool
 	errorMsg   string
 	result     *models.Result
@@ -48,6 +48,9 @@ func (m ContainerListScreen) Init() tea.Cmd {
 // Update handles screen messages.
 func (m ContainerListScreen) Update(msg tea.Msg) (ContainerListScreen, tea.Cmd) {
 	switch message := msg.(type) {
+	case tea.WindowSizeMsg:
+		m.width = message.Width
+		return m, nil
 	case containerListLoadedMsg:
 		m.loading = false
 		if message.err != nil {
@@ -150,21 +153,32 @@ func (m ContainerListScreen) View() string {
 		builder.WriteString(RenderError("Error: "+m.errorMsg) + "\n\n")
 	}
 
-	if len(m.containers) == 0 {
-		builder.WriteString(RenderMuted("No containers found.") + "\n")
-	} else {
+	// Render container table
+	table := NewTable([]TableColumn{
+		{Header: "Name", MinWidth: 10, Priority: 1, Align: "left"},
+		{Header: "State", MinWidth: 8, Priority: 2, Align: "left"},
+		{Header: "Base Image", MinWidth: 15, Priority: 3, Align: "left"},
+	})
+
+	if len(m.containers) > 0 {
+		rows := make([]TableRow, len(m.containers))
 		for i, container := range m.containers {
-			cursor := " "
-			if i == m.cursor {
-				cursor = ">"
+			rows[i] = TableRow{
+				Cells:    []string{container.Name, string(container.Status), container.Image},
+				Selected: i == m.cursor,
+				Data:     &container,
 			}
-			line := fmt.Sprintf("%s %s [%s] %s", cursor, container.Name, container.Status, container.Image)
-			if i == m.cursor {
-				line = RenderAccent(line)
-			}
-			builder.WriteString(line + "\n")
 		}
+		table.SetRows(rows)
 	}
+
+	// Use width for table rendering, fallback to 80 if not set
+	tableWidth := m.width
+	if tableWidth == 0 {
+		tableWidth = 80
+	}
+	builder.WriteString(table.Render(tableWidth, m.cursor))
+	builder.WriteString(strings.Repeat("─", tableWidth) + "\n")
 
 	builder.WriteString("\n" + RenderMuted("Keys: up/down, enter=submenu, s=start, t=stop, d=delete(!), i=images, r=refresh, m=manage, ?=help, q=quit") + "\n")
 
