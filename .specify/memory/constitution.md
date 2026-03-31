@@ -1,18 +1,18 @@
 <!--
 Sync Impact Report
-- Version: 0.2.0 → 0.2.1
-- Modified principles: None
+- Version: 0.2.1 -> 0.3.0
+- Modified principles: IV, V
 - Added sections: None
 - Removed sections: None
 - Templates requiring updates:
 	- .specify/templates/plan-template.md ✅ unchanged (constitution checks already present)
-	- .specify/templates/spec-template.md ✅ unchanged (user scenarios align with principles)
-	- .specify/templates/tasks-template.md ✅ unchanged (test requirements align with Principle V)
+	- .specify/templates/spec-template.md ✅ unchanged
+	- .specify/templates/tasks-template.md ✅ unchanged
   - .specify/templates/commands/*.md ✅ N/A (directory not present in repository)
 - Deferred TODOs: None
-- Amendment rationale: Clarified implemented capabilities after completing
-  `002-refactor-menu-images` so governance decisions reflect current product
-  scope (submenu navigation, container logs/shell, image inspect/delete/prune).
+- Amendment rationale: Incorporated workflows delivered in
+  `005-expand-container-workflows` and clarified contract artifact policy
+  (spec table or contract document) so governance matches current practice.
 -->
 # Container TUI Constitution
 
@@ -27,7 +27,8 @@ command syntax.
 ### Implemented Capabilities
 
 The TUI implements the following workflows as defined in specs
-`001-apple-container-tui` and `002-refactor-menu-images`:
+`001-apple-container-tui`, `002-refactor-menu-images`, and
+`005-expand-container-workflows`:
 
 - **Container Lifecycle**: List containers with status; open context submenus;
   start, stop, and delete containers with command previews and confirmations for
@@ -35,11 +36,18 @@ The TUI implements the following workflows as defined in specs
 - **Container Diagnostics & Access**: Tail container logs and enter containers
   through interactive shell execution with shell auto-detection.
 - **Image Operations**: List local images; pull images by reference; build images
-  from Containerfile or Dockerfile with auto-detection and progress feedback.
+  from Containerfile or Dockerfile with auto-detection, pull toggle support,
+  and progress feedback.
 - **Image Details & Cleanup**: Inspect image metadata and delete/prune images
   through guarded destructive-action flows.
+- **Registry Visibility**: Browse runtime-managed registry entries from a
+  dedicated Registries screen in the image workflow.
+- **Container Export**: Export stopped containers through a previewed
+  export/save flow, with an explicit prompt before removing temporary export
+  images.
 - **Daemon Management**: Start and stop the Apple Container daemon with safety
-  confirmations and status visibility.
+  confirmations and structured status visibility (`running`, `stopped`,
+  `unknown`).
 - **Safety Features**: Dry-run mode for all operations; command preview before
   execution; type-to-confirm for destructive actions; JSONL command logging with
   automatic rotation.
@@ -73,12 +81,16 @@ remote control surface. All state must be stored locally in user space.
 ### IV. Clear Observability
 Every action MUST surface success, failure, stdout, and stderr in a readable
 format. Log output MUST be retained locally for troubleshooting, with paths
-documented in the UI or help text.
+documented in the UI or help text. State classifiers that consume structured
+output (for example daemon status) MUST prefer explicit `unknown` over
+misleading definitive states when required fields are missing.
 
 ### V. Tested Command Contracts
 Command composition, argument validation, and destructive-action guardrails MUST
 have automated tests. Integration tests MUST cover at least start, stop, pull,
 and delete flows against a local Apple Container environment when feasible.
+New workflows (such as registries listing, export command sequences, and build
+option toggles) MUST include targeted builder/parser and UI-flow tests.
 
 ## Platform and Runtime Constraints
 
@@ -91,7 +103,9 @@ and delete flows against a local Apple Container environment when feasible.
 
 ## Workflow and Quality Gates
 
-- Feature specs MUST include a command mapping table for each user action.
+- Feature work MUST include an explicit command mapping artifact for each user
+  action. This may live in the feature spec or in a companion contract document
+  under `specs/<feature>/contracts/`.
 - Any new destructive action MUST include a dry-run path and confirmation copy.
 - Manual verification MUST be performed on macOS 26.x before release.
 - Releases MUST follow semantic versioning with clear changelogs.
@@ -105,4 +119,4 @@ and delete flows against a local Apple Container environment when feasible.
 - Exceptions require written justification in the implementation plan's
 	Complexity Tracking section.
 
-**Version**: 0.2.1 | **Ratified**: 2026-02-11 | **Last Amended**: 2026-02-16
+**Version**: 0.3.0 | **Ratified**: 2026-02-11 | **Last Amended**: 2026-03-31

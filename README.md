@@ -4,8 +4,9 @@
 
 Apple Container TUI is a keyboard-first terminal UI for managing [Apple Container](https://github.com/apple/container)
 operations on macOS. It lets you list containers, start/stop/delete them,
-pull images, build from Containerfiles, and manage the daemon with safe command
-previews and confirmations.
+pull images, browse registries, export stopped containers, build from
+Containerfiles, and manage the daemon with safe command previews and
+confirmations.
 
 **This repository was created as a proof-of-concept to test and document the
 capabilities of spec-kit, a structured software development workflow. The full
