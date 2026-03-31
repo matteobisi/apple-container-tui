@@ -24,13 +24,19 @@ This project demonstrates a hybrid AI-assisted development approach:
 This workflow showcases how different AI models can be leveraged for their
 strengths across different phases of software development.
 
+### AI Contributor Notes
+
+For AI-oriented navigation and UI ownership guidance, see [AGENTS.md](AGENTS.md) and the detailed map in [docs/ai-menu-map.md](docs/ai-menu-map.md).
+
 ## Features
 
 - Container list with container action submenus (start/stop/logs/shell)
+- Stopped-container export workflow with command preview and optional cleanup confirmation
 - Safe delete with type-to-confirm
-- Image management screen (`i`) with list/pull/build/prune
+- Image management screen (`i`) with list/pull/build/prune/registries
 - Image submenu with inspect/delete
-- Daemon start/stop controls
+- Build form pull toggle enabled by default
+- Daemon start/stop controls with structured status parsing and unknown fallback
 - Command preview before execution
 - Dry-run mode for safe practice
 - JSONL command logs with rotation
@@ -64,7 +70,7 @@ docker.io/library/ubuntu                         latest     c2a6e3c0
 markitdown                                       latest     8f3d91a2
 ───────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
-Keys: up/down=navigate, enter=submenu, p=pull, b=build, n=image-prune, r=refresh, esc=back
+Keys: up/down=navigate, enter=submenu, p=pull, g=registries, b=build, n=image-prune, r=refresh, esc=back
 ```
 
 The application launches in full-screen mode (alternate screen buffer), clearing the terminal
@@ -112,8 +118,14 @@ Helpful keys:
 
 - `?` for help
 - `i` to open image management
-- `p`/`b`/`n` for pull/build/prune inside image view
+- `p`/`g`/`b`/`n` for pull/registries/build/prune inside image view
 - `m` to manage the daemon
+
+Additional workflows:
+
+- Export is available from the submenu of stopped containers only, with an explicit prompt before removing the temporary export image
+- Build previews show whether `--pull` will be applied
+- Daemon status can render `running`, `stopped`, or `unknown`
 
 ## Configuration
 

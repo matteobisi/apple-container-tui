@@ -12,6 +12,7 @@ type BuildImageBuilder struct {
 	Tag         string
 	FilePath    string
 	ContextPath string
+	PullLatest  bool
 }
 
 // Validate ensures required inputs are provided.
@@ -36,8 +37,13 @@ func (b BuildImageBuilder) Build() (models.Command, error) {
 	tag, _ := normalizeRequiredToken(b.Tag, "tag")
 	filePath := strings.TrimSpace(b.FilePath)
 	contextPath := strings.TrimSpace(b.ContextPath)
+	args := []string{"build"}
+	if b.PullLatest {
+		args = append(args, "--pull")
+	}
+	args = append(args, "-t", tag, "-f", filePath, contextPath)
 	return models.Command{
 		Executable: "container",
-		Args:       []string{"build", "-t", tag, "-f", filePath, contextPath},
+		Args:       args,
 	}, nil
 }

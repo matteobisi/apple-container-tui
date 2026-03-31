@@ -99,17 +99,26 @@ func (m DaemonControlScreen) Update(msg tea.Msg) (DaemonControlScreen, tea.Cmd) 
 func (m DaemonControlScreen) View() string {
 	builder := strings.Builder{}
 	builder.WriteString(RenderTitle("Daemon Control") + "\n\n")
-	status := "stopped"
-	if m.status.Running {
-		status = "running"
+	status := string(m.status.State)
+	if status == "" {
+		status = string(models.DaemonStateUnknown)
 	}
 	statusLine := "Status: " + status
-	if m.status.Running {
+	switch m.status.State {
+	case models.DaemonStateRunning:
 		statusLine = RenderSuccess(statusLine)
-	} else {
+	case models.DaemonStateStopped:
 		statusLine = RenderWarning(statusLine)
+	default:
+		statusLine = RenderMuted(statusLine)
 	}
 	builder.WriteString(statusLine + "\n")
+	if m.status.Version != "" {
+		builder.WriteString(RenderMuted("Version: "+m.status.Version) + "\n")
+	}
+	if m.status.State == models.DaemonStateUnknown {
+		builder.WriteString(RenderMuted("Structured status output is incomplete; refresh or inspect daemon status directly.") + "\n")
+	}
 	if m.loading {
 		builder.WriteString("\n" + RenderMuted("Loading...") + "\n")
 	}

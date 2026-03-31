@@ -22,10 +22,14 @@ const (
 	ScreenImageInspect ActiveScreen = "image-inspect"
 	// ScreenImagePull shows the image pull workflow.
 	ScreenImagePull ActiveScreen = "image-pull"
+	// ScreenRegistries shows runtime-managed registry entries.
+	ScreenRegistries ActiveScreen = "registries"
 	// ScreenFilePicker shows the build file picker.
 	ScreenFilePicker ActiveScreen = "file-picker"
 	// ScreenBuild shows the build workflow.
 	ScreenBuild ActiveScreen = "build"
+	// ScreenContainerExport shows the container export workflow.
+	ScreenContainerExport ActiveScreen = "container-export"
 	// ScreenDaemonControl shows daemon start/stop controls.
 	ScreenDaemonControl ActiveScreen = "daemon-control"
 	// ScreenHelp shows the help screen.

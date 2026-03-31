@@ -18,6 +18,12 @@ func (f flowExecutor) Execute(cmd models.Command) (models.Result, error) {
 	if len(cmd.Args) > 0 && cmd.Args[0] == "list" {
 		return models.Result{Stdout: f.listOutput, Status: models.ResultSuccess}, nil
 	}
+	if len(cmd.Args) > 0 && cmd.Args[0] == "registry" {
+		return models.Result{Stdout: `[{"hostname":"registry.example.com","username":"user"}]`, Status: models.ResultSuccess}, nil
+	}
+	if len(cmd.Args) > 1 && cmd.Args[0] == "system" && cmd.Args[1] == "status" {
+		return models.Result{Stdout: `{"status":"running"}`, Status: models.ResultSuccess}, nil
+	}
 	return f.result, nil
 }
 
@@ -124,7 +130,7 @@ func TestBuildScreenMissingFile(t *testing.T) {
 func TestDaemonControlStatusFlow(t *testing.T) {
 	exec := flowExecutor{result: models.Result{Stdout: "running", Status: models.ResultSuccess}}
 	screen := NewDaemonControlScreen(exec)
-	msg := daemonStatusMsg{status: models.DaemonStatus{Running: true}}
+	msg := daemonStatusMsg{status: models.DaemonStatus{State: models.DaemonStateRunning, Running: true}}
 	updated, _ := screen.Update(msg)
 	view := updated.View()
 	if !strings.Contains(view, "running") {
@@ -133,6 +139,18 @@ func TestDaemonControlStatusFlow(t *testing.T) {
 	updated, _ = updated.Update(daemonActionMsg{result: models.Result{Status: models.ResultSuccess}})
 	if updated.result == nil {
 		t.Fatalf("expected result")
+	}
+}
+
+func TestRegistriesScreenFlow(t *testing.T) {
+	screen := NewRegistriesScreen(flowExecutor{})
+	updated, _ := screen.Update(registriesLoadedMsg{entries: []models.RegistryLogin{{Hostname: "registry.example.com", Username: "user"}}})
+	if len(updated.entries) != 1 {
+		t.Fatalf("expected one registry entry")
+	}
+	_, cmd := updated.Update(tea.KeyMsg{Type: tea.KeyEscape})
+	if cmd == nil {
+		t.Fatalf("expected back cmd")
 	}
 }
 

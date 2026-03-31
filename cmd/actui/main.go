@@ -12,7 +12,7 @@ import (
 	"container-tui/src/ui"
 )
 
-var version = "dev"
+var version = "0.4"
 
 func main() {
 	var dryRun bool

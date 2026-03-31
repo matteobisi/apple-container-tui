@@ -12,5 +12,5 @@ func (CheckDaemonStatusBuilder) Validate() error {
 
 // Build returns the daemon status command.
 func (CheckDaemonStatusBuilder) Build() (models.Command, error) {
-	return models.Command{Executable: "container", Args: []string{"system", "status"}}, nil
+	return models.Command{Executable: "container", Args: []string{"system", "status", "--format", "json"}}, nil
 }

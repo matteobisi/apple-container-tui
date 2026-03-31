@@ -23,19 +23,21 @@ type AppModel struct {
 	selectedImage     *models.Image
 	navDebugEnabled   bool
 
-	containerList  ContainerListScreen
-	containerSub   ContainerSubmenuScreen
-	containerLogs  ContainerLogsScreen
-	containerShell ContainerShellScreen
-	imageList      ImageListScreen
-	imageSub       ImageSubmenuScreen
-	imageInspect   ImageInspectScreen
-	imagePull      ImagePullScreen
-	filePicker     FilePickerScreen
-	buildScreen    BuildScreen
-	daemonControl  DaemonControlScreen
-	help           HelpScreen
-	spinner        SpinnerModel
+	containerList   ContainerListScreen
+	containerSub    ContainerSubmenuScreen
+	containerLogs   ContainerLogsScreen
+	containerShell  ContainerShellScreen
+	imageList       ImageListScreen
+	imageSub        ImageSubmenuScreen
+	imageInspect    ImageInspectScreen
+	imagePull       ImagePullScreen
+	registries      RegistriesScreen
+	filePicker      FilePickerScreen
+	buildScreen     BuildScreen
+	containerExport ContainerExportScreen
+	daemonControl   DaemonControlScreen
+	help            HelpScreen
+	spinner         SpinnerModel
 }
 
 // NewAppModel creates the initial app model.
@@ -53,8 +55,10 @@ func NewAppModel(executor services.CommandExecutor, version string) AppModel {
 		imageSub:        NewImageSubmenuScreen(executor),
 		imageInspect:    NewImageInspectScreen(executor),
 		imagePull:       NewImagePullScreen(executor),
+		registries:      NewRegistriesScreen(executor),
 		filePicker:      NewFilePickerScreen(executor),
 		buildScreen:     NewBuildScreen(executor, ""),
+		containerExport: NewContainerExportScreen(executor),
 		daemonControl:   NewDaemonControlScreen(executor),
 		help:            HelpScreen{Version: version},
 		spinner:         NewSpinnerModel(),
@@ -83,8 +87,10 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.imageSub, _ = m.imageSub.Update(message)
 		m.imageInspect, _ = m.imageInspect.Update(message)
 		m.imagePull, _ = m.imagePull.Update(message)
+		m.registries, _ = m.registries.Update(message)
 		m.filePicker, _ = m.filePicker.Update(message)
 		m.buildScreen, _ = m.buildScreen.Update(message)
+		m.containerExport, _ = m.containerExport.Update(message)
 		m.daemonControl, _ = m.daemonControl.Update(message)
 		m.help, _ = m.help.Update(message)
 	case tea.KeyMsg:
@@ -102,6 +108,7 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.containerSub = m.containerSub.SetContainer(containerCopy)
 			m.containerLogs = m.containerLogs.SetContainer(containerCopy)
 			m.containerShell = m.containerShell.SetContainer(containerCopy)
+			m.containerExport = m.containerExport.SetContainer(containerCopy)
 		}
 		if message.image != nil {
 			imageCopy := *message.image
@@ -143,10 +150,14 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			cmd = m.imageInspect.Init()
 		case ScreenImagePull:
 			cmd = m.imagePull.Init()
+		case ScreenRegistries:
+			cmd = m.registries.Init()
 		case ScreenFilePicker:
 			cmd = m.filePicker.Init()
 		case ScreenBuild:
 			cmd = m.buildScreen.Init()
+		case ScreenContainerExport:
+			cmd = m.containerExport.Init()
 		case ScreenDaemonControl:
 			cmd = m.daemonControl.Init()
 		case ScreenHelp:
@@ -189,6 +200,10 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			updated, updateCmd := m.imagePull.Update(msg)
 			m.imagePull = updated
 			cmd = tea.Batch(cmd, updateCmd)
+		case ScreenRegistries:
+			updated, updateCmd := m.registries.Update(msg)
+			m.registries = updated
+			cmd = tea.Batch(cmd, updateCmd)
 		case ScreenContainerSubmenu:
 			updated, updateCmd := m.containerSub.Update(msg)
 			m.containerSub = updated
@@ -220,6 +235,10 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case ScreenBuild:
 			updated, updateCmd := m.buildScreen.Update(msg)
 			m.buildScreen = updated
+			cmd = tea.Batch(cmd, updateCmd)
+		case ScreenContainerExport:
+			updated, updateCmd := m.containerExport.Update(msg)
+			m.containerExport = updated
 			cmd = tea.Batch(cmd, updateCmd)
 		case ScreenDaemonControl:
 			updated, updateCmd := m.daemonControl.Update(msg)
@@ -264,10 +283,14 @@ func (m AppModel) View() string {
 		return m.imageInspect.View() + "\n" + status
 	case ScreenImagePull:
 		return m.imagePull.View() + "\n" + status
+	case ScreenRegistries:
+		return m.registries.View() + "\n" + status
 	case ScreenFilePicker:
 		return m.filePicker.View() + "\n" + status
 	case ScreenBuild:
 		return m.buildScreen.View() + "\n" + status
+	case ScreenContainerExport:
+		return m.containerExport.View() + "\n" + status
 	case ScreenDaemonControl:
 		return m.daemonControl.View() + "\n" + status
 	case ScreenHelp:
@@ -303,12 +326,23 @@ func (m AppModel) statusBarInfo() (string, string) {
 		if m.imagePull.preview != nil {
 			preview = m.imagePull.preview.Command.String()
 		}
+	case ScreenRegistries:
+		label = "Registries"
 	case ScreenFilePicker:
 		label = "File Picker"
 	case ScreenBuild:
 		label = "Build"
 		if m.buildScreen.preview != nil {
 			preview = m.buildScreen.preview.Command.String()
+		}
+	case ScreenContainerExport:
+		label = "Export Container"
+		if m.containerExport.preview != nil {
+			if len(m.containerExport.preview.Commands) > 0 {
+				preview = m.containerExport.preview.Commands[0].String()
+			} else {
+				preview = m.containerExport.preview.Command.String()
+			}
 		}
 	case ScreenDaemonControl:
 		label = "Daemon"
@@ -346,10 +380,14 @@ func (m AppModel) isLoading() bool {
 		return m.containerShell.loading
 	case ScreenImageList:
 		return m.imageList.loading
+	case ScreenRegistries:
+		return m.registries.loading
 	case ScreenImagePull:
 		return m.imagePull.loading
 	case ScreenBuild:
 		return m.buildScreen.loading
+	case ScreenContainerExport:
+		return m.containerExport.loading
 	case ScreenDaemonControl:
 		return m.daemonControl.loading
 	default:
@@ -396,10 +434,14 @@ func (m AppModel) initForActive() tea.Cmd {
 		return m.imageInspect.Init()
 	case ScreenImagePull:
 		return m.imagePull.Init()
+	case ScreenRegistries:
+		return m.registries.Init()
 	case ScreenFilePicker:
 		return m.filePicker.Init()
 	case ScreenBuild:
 		return m.buildScreen.Init()
+	case ScreenContainerExport:
+		return m.containerExport.Init()
 	case ScreenDaemonControl:
 		return m.daemonControl.Init()
 	case ScreenHelp:

@@ -95,6 +95,8 @@ func (m ImageListScreen) Update(msg tea.Msg) (ImageListScreen, tea.Cmd) {
 			return m, m.fetchImagesCmd()
 		case "p":
 			return m, func() tea.Msg { return screenChangeMsg{target: ScreenImagePull, push: true} }
+		case "g":
+			return m, func() tea.Msg { return screenChangeMsg{target: ScreenRegistries, push: true} }
 		case "b":
 			return m, func() tea.Msg { return screenChangeMsg{target: ScreenFilePicker, push: true} }
 		case "n":
@@ -161,7 +163,7 @@ func (m ImageListScreen) View() string {
 	if m.confirm != nil {
 		builder.WriteString("\n" + m.confirm.View() + "\n")
 	}
-	builder.WriteString("\n" + RenderMuted("Keys: up/down=navigate, enter=submenu, p=pull, b=build, n=image-prune, r=refresh, esc=back") + "\n")
+	builder.WriteString("\n" + RenderMuted("Keys: up/down=navigate, enter=submenu, p=pull, g=registries, b=build, n=image-prune, r=refresh, esc=back") + "\n")
 	return builder.String()
 }
 
