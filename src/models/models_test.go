@@ -104,9 +104,30 @@ func TestBuildSourceWithComputedExistsMissing(t *testing.T) {
 }
 
 func TestDaemonStatus(t *testing.T) {
-	status := DaemonStatus{Running: true, Version: "1.0", LastChecked: time.Now()}
+	status := DaemonStatus{State: DaemonStateRunning, Running: true, Version: "1.0", LastChecked: time.Now()}
 	if !status.Running {
 		t.Fatalf("expected running status")
+	}
+}
+
+func TestRegistryLoginValidate(t *testing.T) {
+	if err := (RegistryLogin{}).Validate(); err == nil {
+		t.Fatalf("expected missing hostname error")
+	}
+	if err := (RegistryLogin{Hostname: "registry.example.com"}).Validate(); err != nil {
+		t.Fatalf("unexpected registry validation error: %v", err)
+	}
+}
+
+func TestExportReferenceHelpers(t *testing.T) {
+	now := time.Date(2026, 3, 31, 12, 0, 0, 0, time.UTC)
+	imageRef := BuildExportImageReference("Web API", "abc123", now)
+	archiveName := BuildExportArchiveName("Web API", "abc123", now)
+	if !strings.Contains(imageRef, "actui-export/web-api") {
+		t.Fatalf("unexpected image ref: %s", imageRef)
+	}
+	if !strings.Contains(archiveName, "web-api-") || !strings.HasSuffix(archiveName, ".oci.tar") {
+		t.Fatalf("unexpected archive name: %s", archiveName)
 	}
 }
 

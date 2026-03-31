@@ -24,6 +24,7 @@ type BuildScreen struct {
 	filePath     string
 	context      string
 	input        textinput.Model
+	pullLatest   bool
 	preview      *CommandPreviewModal
 	loading      bool
 	errorMsg     string
@@ -48,6 +49,7 @@ func NewBuildScreen(executor services.CommandExecutor, filePath string) BuildScr
 		filePath:     filePath,
 		context:      filepath.Dir(filePath),
 		input:        input,
+		pullLatest:   true,
 		viewport:     viewportModel,
 		progress:     NewProgressModel(),
 	}
@@ -110,6 +112,9 @@ func (m BuildScreen) Update(msg tea.Msg) (BuildScreen, tea.Cmd) {
 			return m, func() tea.Msg { return BackToListMsg{} }
 		case "?":
 			return m, func() tea.Msg { return screenChangeMsg{target: ScreenHelp} }
+		case "p":
+			m.pullLatest = !m.pullLatest
+			return m, nil
 		case "enter":
 			if strings.TrimSpace(m.filePath) == "" {
 				m.errorMsg = "no build file selected"
@@ -119,6 +124,7 @@ func (m BuildScreen) Update(msg tea.Msg) (BuildScreen, tea.Cmd) {
 				Tag:         strings.TrimSpace(m.input.Value()),
 				FilePath:    m.filePath,
 				ContextPath: m.context,
+				PullLatest:  m.pullLatest,
 			}
 			cmd, err := builder.Build()
 			if err != nil {
@@ -143,6 +149,11 @@ func (m BuildScreen) View() string {
 		builder.WriteString(RenderMuted("File: "+m.filePath) + "\n\n")
 	}
 	builder.WriteString(m.input.View() + "\n")
+	checkbox := "[ ] Pull latest base images"
+	if m.pullLatest {
+		checkbox = "[x] Pull latest base images"
+	}
+	builder.WriteString(RenderMuted(checkbox) + "\n")
 	if m.loading {
 		builder.WriteString("\n" + RenderMuted("Building...") + "\n")
 	}
@@ -160,7 +171,7 @@ func (m BuildScreen) View() string {
 		builder.WriteString("\n\n")
 		builder.WriteString(m.viewport.View())
 	}
-	builder.WriteString("\n" + RenderMuted("Keys: enter=preview, ?=help, esc=back") + "\n")
+	builder.WriteString("\n" + RenderMuted("Keys: enter=preview, p=toggle pull, ?=help, esc=back") + "\n")
 	return builder.String()
 }
 

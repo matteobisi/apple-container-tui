@@ -21,6 +21,21 @@ func (s stubExecutor) Execute(cmd models.Command) (models.Result, error) {
 	return s.result, s.err
 }
 
+type queueExecutor struct {
+	results  []models.Result
+	errs     []error
+	commands []models.Command
+}
+
+func (q *queueExecutor) Execute(cmd models.Command) (models.Result, error) {
+	q.commands = append(q.commands, cmd)
+	index := len(q.commands) - 1
+	if index < len(q.results) {
+		return q.results[index], q.errs[index]
+	}
+	return models.Result{Status: models.ResultSuccess}, nil
+}
+
 func jsonMarshal(entry LogEntry) ([]byte, error) {
 	data, err := json.Marshal(entry)
 	if err != nil {
@@ -112,16 +127,36 @@ func TestBuilders(t *testing.T) {
 	if err != nil || statusCmd.Args[1] != "status" {
 		t.Fatalf("unexpected daemon status: %v %v", statusCmd, err)
 	}
+	if len(statusCmd.Args) < 4 || statusCmd.Args[2] != "--format" || statusCmd.Args[3] != "json" {
+		t.Fatalf("expected daemon status json args, got %v", statusCmd.Args)
+	}
+	registryCmd, err := RegistryListBuilder{}.Build()
+	if err != nil || registryCmd.Args[0] != "registry" || registryCmd.Args[3] != "json" {
+		t.Fatalf("unexpected registry list command: %v %v", registryCmd, err)
+	}
 }
 
 func TestBuildImageBuilderTrims(t *testing.T) {
-	builder := BuildImageBuilder{Tag: " tag ", FilePath: " ./Containerfile ", ContextPath: " . "}
+	builder := BuildImageBuilder{Tag: " tag ", FilePath: " ./Containerfile ", ContextPath: " . ", PullLatest: true}
 	cmd, err := builder.Build()
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if cmd.Args[2] != "tag" || cmd.Args[4] != "./Containerfile" {
+	if cmd.Args[1] != "--pull" || cmd.Args[3] != "tag" || cmd.Args[5] != "./Containerfile" {
 		t.Fatalf("unexpected args: %v", cmd.Args)
+	}
+}
+
+func TestBuildImageBuilderPullOptional(t *testing.T) {
+	builder := BuildImageBuilder{Tag: "tag", FilePath: "Containerfile", ContextPath: "."}
+	cmd, err := builder.Build()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	for _, arg := range cmd.Args {
+		if arg == "--pull" {
+			t.Fatalf("did not expect --pull in args: %v", cmd.Args)
+		}
 	}
 }
 
@@ -198,13 +233,75 @@ func TestParserHelpers(t *testing.T) {
 }
 
 func TestParseDaemonStatus(t *testing.T) {
-	status := ParseDaemonStatus("not running")
-	if status.Running {
-		t.Fatalf("expected not running")
+	status := ParseDaemonStatus(`{"status":"running","apiServerVersion":"1.0"}`)
+	if !status.Running || status.State != models.DaemonStateRunning {
+		t.Fatalf("expected running status, got %#v", status)
 	}
-	status = ParseDaemonStatus("running")
-	if !status.Running {
-		t.Fatalf("expected running")
+	status = ParseDaemonStatus(`{"status":"not running"}`)
+	if status.Running || status.State != models.DaemonStateStopped {
+		t.Fatalf("expected stopped status, got %#v", status)
+	}
+	status = ParseDaemonStatus(`{"apiServerVersion":"1.0"}`)
+	if status.State != models.DaemonStateUnknown {
+		t.Fatalf("expected unknown status, got %#v", status)
+	}
+}
+
+func TestParseRegistryList(t *testing.T) {
+	entries, err := ParseRegistryList(`[{"hostname":"registry.example.com","username":"user"},{"hostname":""}]`)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(entries) != 1 || entries[0].Hostname != "registry.example.com" {
+		t.Fatalf("unexpected registry entries: %#v", entries)
+	}
+}
+
+func TestExportWorkflowPlanAndExecute(t *testing.T) {
+	dir := t.TempDir()
+	workflow := NewExportWorkflowService(nil)
+	workflow.Now = func() time.Time {
+		return time.Date(2026, 3, 31, 12, 0, 0, 0, time.UTC)
+	}
+	plan, err := workflow.Plan(models.Container{ID: "abc123", Name: "web", Status: models.ContainerStatusStopped}, dir)
+	if err != nil {
+		t.Fatalf("unexpected plan error: %v", err)
+	}
+	if len(plan.Commands) != 2 {
+		t.Fatalf("expected 2 commands, got %d", len(plan.Commands))
+	}
+	if plan.Commands[0].Args[0] != "export" || plan.Commands[1].Args[1] != "save" || plan.CleanupCommand.Args[2] != plan.GeneratedImageRef {
+		t.Fatalf("unexpected export command sequence: %#v %#v", plan.Commands, plan.CleanupCommand)
+	}
+
+	exec := &queueExecutor{
+		results: []models.Result{
+			{Status: models.ResultSuccess, Stdout: "exported"},
+			{Status: models.ResultSuccess, Stdout: "saved"},
+		},
+		errs: []error{nil, nil},
+	}
+	workflow.Executor = exec
+	result, err := workflow.Execute(plan)
+	if err != nil {
+		t.Fatalf("unexpected execute error: %v", err)
+	}
+	if result.Result.Status != models.ResultSuccess {
+		t.Fatalf("expected success, got %#v", result.Result)
+	}
+	if len(exec.commands) != 2 {
+		t.Fatalf("expected export and save only, got %#v", exec.commands)
+	}
+	if strings.Contains(result.Result.Stdout, "cleanup") {
+		t.Fatalf("did not expect cleanup output, got %#v", result.Result)
+	}
+}
+
+func TestExportWorkflowRejectsRunningContainer(t *testing.T) {
+	workflow := NewExportWorkflowService(nil)
+	_, err := workflow.Plan(models.Container{ID: "abc123", Name: "web", Status: models.ContainerStatusRunning}, t.TempDir())
+	if err == nil {
+		t.Fatalf("expected running container plan rejection")
 	}
 }
 

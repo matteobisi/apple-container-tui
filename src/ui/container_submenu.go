@@ -121,6 +121,11 @@ func (m ContainerSubmenuScreen) Update(msg tea.Msg) (ContainerSubmenuScreen, tea
 				return m, func() tea.Msg {
 					return screenChangeMsg{target: ScreenContainerShell, container: &containerCopy, push: true}
 				}
+			case "export":
+				containerCopy := m.container
+				return m, func() tea.Msg {
+					return screenChangeMsg{target: ScreenContainerExport, container: &containerCopy, push: true}
+				}
 			default:
 				return m, func() tea.Msg { return screenChangeMsg{target: ScreenContainerList} }
 			}
@@ -184,7 +189,7 @@ func (m ContainerSubmenuScreen) View() string {
 }
 
 func (m ContainerSubmenuScreen) buildOptions() []containerSubmenuOption {
-	options := make([]containerSubmenuOption, 0, 4)
+	options := make([]containerSubmenuOption, 0, 5)
 	if m.container.Status == models.ContainerStatusRunning {
 		options = append(options, containerSubmenuOption{label: "Stop container", action: "stop"})
 	} else {
@@ -193,6 +198,8 @@ func (m ContainerSubmenuScreen) buildOptions() []containerSubmenuOption {
 	options = append(options, containerSubmenuOption{label: "Tail container log", action: "logs"})
 	if m.container.Status == models.ContainerStatusRunning {
 		options = append(options, containerSubmenuOption{label: "Enter container", action: "shell"})
+	} else {
+		options = append(options, containerSubmenuOption{label: "Export container", action: "export"})
 	}
 	options = append(options, containerSubmenuOption{label: "Back", action: "back"})
 	return options

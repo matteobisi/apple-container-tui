@@ -9,6 +9,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 
 	"container-tui/src/models"
+	"container-tui/src/services"
 )
 
 type statusExecutor struct {
@@ -95,7 +96,7 @@ func TestContainerListExecuteCommandCmd(t *testing.T) {
 }
 
 func TestDaemonControlCommands(t *testing.T) {
-	screen := NewDaemonControlScreen(statusExecutor{stdout: "running", result: models.Result{Status: models.ResultSuccess}})
+	screen := NewDaemonControlScreen(statusExecutor{stdout: `{"status":"running","apiServerVersion":"1.0"}`, result: models.Result{Status: models.ResultSuccess}})
 	cmd := screen.fetchStatusCmd()
 	msg := cmd()
 	if _, ok := msg.(daemonStatusMsg); !ok {
@@ -121,6 +122,79 @@ func TestBuildScreenCancelAndError(t *testing.T) {
 	updated, _ = updated.Update(buildResultMsg{err: errors.New("boom"), result: models.Result{Status: models.ResultError, Stderr: "boom"}})
 	if updated.errorMsg == "" {
 		t.Fatalf("expected error message")
+	}
+}
+
+func TestBuildScreenPullToggle(t *testing.T) {
+	screen := NewBuildScreen(flowExecutor{}, "./Containerfile")
+	if !screen.pullLatest {
+		t.Fatalf("expected pull latest enabled by default")
+	}
+	updated, _ := screen.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'p'}})
+	if updated.pullLatest {
+		t.Fatalf("expected pull latest toggled off")
+	}
+	updated.input.SetValue("app:latest")
+	updated, _ = updated.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	if updated.preview == nil || strings.Contains(updated.preview.Command.String(), "--pull") {
+		t.Fatalf("expected preview without pull flag")
+	}
+}
+
+func TestRegistriesScreenLoadAndView(t *testing.T) {
+	screen := NewRegistriesScreen(flowExecutor{})
+	updated, _ := screen.Update(registriesLoadedMsg{entries: []models.RegistryLogin{{Hostname: "registry.example.com", Username: "user"}}})
+	view := updated.View()
+	if !strings.Contains(view, "registry.example.com") {
+		t.Fatalf("expected registry hostname in view")
+	}
+}
+
+func TestContainerSubmenuStoppedShowsExport(t *testing.T) {
+	screen := NewContainerSubmenuScreen(flowExecutor{}).SetContainer(models.Container{ID: "abc", Name: "web", Status: models.ContainerStatusStopped})
+	found := false
+	for _, option := range screen.options {
+		if option.action == "export" {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatalf("expected export option for stopped container")
+	}
+}
+
+func TestContainerExportScreenPreview(t *testing.T) {
+	screen := NewContainerExportScreen(flowExecutor{}).SetContainer(models.Container{ID: "abc", Name: "web", Status: models.ContainerStatusStopped})
+	screen.input.SetValue(t.TempDir())
+	updated, _ := screen.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	if updated.preview == nil || len(updated.preview.Commands) != 2 {
+		t.Fatalf("expected 2-command export preview")
+	}
+	if updated.plan == nil || updated.plan.CleanupCommand.Executable == "" {
+		t.Fatalf("expected cleanup command in export plan")
+	}
+}
+
+func TestContainerExportScreenPromptsForCleanupAfterSuccess(t *testing.T) {
+	screen := NewContainerExportScreen(flowExecutor{}).SetContainer(models.Container{ID: "abc", Name: "web", Status: models.ContainerStatusStopped})
+	screen.input.SetValue(t.TempDir())
+	updated, _ := screen.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	resultMsg := containerExportResultMsg{
+		result: services.ExportWorkflowResult{
+			Result:      models.Result{Status: models.ResultSuccess, Stdout: "Exported OCI archive: /tmp/out.tar"},
+			ArchivePath: "/tmp/out.tar",
+		},
+	}
+	updated, _ = updated.Update(resultMsg)
+	if updated.confirm == nil {
+		t.Fatalf("expected cleanup confirmation")
+	}
+	updated, _ = updated.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'n'}})
+	if updated.confirm != nil {
+		t.Fatalf("expected cleanup confirmation cleared")
+	}
+	if updated.result == nil || !strings.Contains(updated.result.Stdout, "retained") {
+		t.Fatalf("expected retained image note, got %#v", updated.result)
 	}
 }
 
