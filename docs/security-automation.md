@@ -8,6 +8,7 @@ This document defines repository security automation operations for OSSF Scoreca
 - Dependabot config: .github/dependabot.yml
 - Ecosystems in scope: gomod, github-actions
 - Dependabot cadence: monthly for security and version updates
+- Workflow actions are pinned to immutable commit SHAs where practical
 
 ## Canonical Required Check
 
@@ -15,6 +16,7 @@ This document defines repository security automation operations for OSSF Scoreca
 - Required job/check name: OSSF Scorecard
 - Branch protection policy target: default branch
 - Merge pass condition: successful workflow completion (no numeric score threshold)
+- Workflow-level token permissions: none by default; permissions are granted only at job scope
 
 ## Branch Protection Mapping
 
@@ -28,7 +30,7 @@ This document defines repository security automation operations for OSSF Scoreca
 ### Scorecard
 
 1. Open a pull request and verify the OSSF Scorecard check appears.
-2. Verify the same workflow runs on push to the default branch.
+2. Verify the same workflow runs only on push to the default branch.
 3. Confirm that a non-success Scorecard result blocks merge while branch protection is enabled.
 
 ### Dependabot
@@ -60,10 +62,22 @@ This document defines repository security automation operations for OSSF Scoreca
 - Confirm the required check name matches exactly: OSSF Scorecard.
 - Confirm workflow file remains at .github/workflows/scorecard.yml.
 
-### Scorecard job skipped on push
+### StepSecurity reports broad token permissions
 
-- Confirm push is to the repository default branch.
-- Check workflow condition logic in the ossf-scorecard job.
+- Keep workflow-level `permissions` empty and grant only job-level permissions required by Scorecard.
+- Avoid setting `security-events: write` at workflow scope.
+- Re-run the workflow after permission changes and verify the SARIF upload step still succeeds.
+
+### Scorecard or security review flags unpinned actions
+
+- Pin third-party and GitHub-maintained actions by full commit SHA instead of floating tags.
+- Keep a trailing comment with the human-readable tag for maintenance, for example `# v4.2.2`.
+- When updating an action, refresh both the SHA and the tag comment together.
+
+### No Scorecard push run on a feature branch
+
+- This is expected: push-triggered Scorecard runs are limited to `main`.
+- Pull requests still run the `OSSF Scorecard` check normally.
 
 ### Dependabot not opening updates
 

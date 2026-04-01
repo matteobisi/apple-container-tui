@@ -17,6 +17,8 @@ This contract defines repository-level automation required to satisfy security h
 - Workflow MUST expose a stable job/check identity suitable for branch protection required-check binding.
 - Canonical required-check name MUST be `OSSF Scorecard`.
 - Workflow permissions MUST be explicitly declared and least-privilege.
+- Workflow-level token permissions SHOULD be empty or more restrictive than job-level permissions; write scopes MUST be granted only to the job that needs them.
+- External GitHub Actions references SHOULD be pinned to immutable commit SHAs rather than floating version tags.
 
 ### Execution Contract
 - Every pull request MUST show a Scorecard check run.
