@@ -29,6 +29,10 @@ go mod download
 go build -o actui ./cmd/actui
 ```
 
+The same build command is used by CI in the `Build Binary` workflow to keep local and automated builds aligned.
+
+For CI trigger behavior, artifact retention, and troubleshooting, see `docs/binary-build-automation.md`.
+
 ## Run
 
 ```bash

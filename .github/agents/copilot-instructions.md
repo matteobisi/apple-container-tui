@@ -13,6 +13,10 @@ Auto-generated from all feature plans. Last updated: 2026-04-01
 - Local filesystem only for exported OCI tar archives; no new persistent app-owned state required (005-expand-container-workflows)
 - YAML (GitHub Actions workflow and Dependabot configuration), Go 1.21 module context for dependency ecosystem detection + GitHub Actions runner (`ubuntu-latest`), OSSF Scorecard GitHub Action, Dependabot version updates engine (006-repo-security-hardening)
 - Git repository configuration files only; no runtime data storage (006-repo-security-hardening)
+- Go 1.21+ for project build, GitHub Actions workflow YAML + `actions/checkout`, `actions/setup-go`, `actions/upload-artifact`, Go toolchain from `go.mod` (007-build-binary-action)
+- GitHub Actions artifact storage and repository documentation files (007-build-binary-action)
+- Go 1.21+ for build command; GitHub Actions YAML for automation + `actions/checkout`, `actions/setup-go`, `actions/upload-artifact`, Go toolchain from `go.mod` (007-build-binary-action)
+- GitHub Actions artifact storage and repository Markdown docs in `docs/` (007-build-binary-action)
 
 - Go 1.21+ (chosen for optimal balance of productivity, performance, binary distribution, and TUI library maturity) + Bubbletea v1.2.4 (TUI framework), Lipgloss v1.0.0 (styling), Bubbles v0.20.0 (UI components), Cobra (CLI), Viper (config management) (001-apple-container-tui)
 
@@ -32,9 +36,9 @@ tests/
 Go 1.21+ (chosen for optimal balance of productivity, performance, binary distribution, and TUI library maturity): Follow standard conventions
 
 ## Recent Changes
+- 007-build-binary-action: Added Go 1.21+ for build command; GitHub Actions YAML for automation + `actions/checkout`, `actions/setup-go`, `actions/upload-artifact`, Go toolchain from `go.mod`
+- 007-build-binary-action: Added Go 1.21+ for project build, GitHub Actions workflow YAML + `actions/checkout`, `actions/setup-go`, `actions/upload-artifact`, Go toolchain from `go.mod`
 - 006-repo-security-hardening: Added YAML (GitHub Actions workflow and Dependabot configuration), Go 1.21 module context for dependency ecosystem detection + GitHub Actions runner (`ubuntu-latest`), OSSF Scorecard GitHub Action, Dependabot version updates engine
-- 005-expand-container-workflows: Added Go 1.21+ (module target), validated in local Apple Container environment on macOS 26.x + Bubble Tea v1.2.4, Bubbles v0.20.0, Lipgloss v1.0.0, Cobra v1.8.1, Viper v1.19.0, Go standard library `encoding/json`
-- 004-submenu-table-style: Added Go 1.21+ (tested on Go 1.26.0) + Bubbletea v1.2.4 (TUI framework), Lipgloss v1.0.0 (styling), Bubbles v0.20.0
 
 
 <!-- MANUAL ADDITIONS START -->

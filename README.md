@@ -183,6 +183,10 @@ Enforcement baseline on `main`:
 
 Operational guidance, branch-protection mapping, and troubleshooting are documented in [docs/security-automation.md](docs/security-automation.md).
 
+## Binary Build Automation
+
+Build workflow operations, retention policy, validation checklist, and troubleshooting are documented in [docs/binary-build-automation.md](docs/binary-build-automation.md).
+
 ## Contribution Workflow
 
 All changes (human or AI-authored) should follow the same repository workflow:
