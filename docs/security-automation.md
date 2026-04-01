@@ -8,6 +8,7 @@ This document defines repository security automation operations for OSSF Scoreca
 - Dependabot config: .github/dependabot.yml
 - Ecosystems in scope: gomod, github-actions
 - Dependabot cadence: monthly for security and version updates
+- Workflow actions are pinned to immutable commit SHAs where practical
 
 ## Canonical Required Check
 
@@ -15,6 +16,7 @@ This document defines repository security automation operations for OSSF Scoreca
 - Required job/check name: OSSF Scorecard
 - Branch protection policy target: default branch
 - Merge pass condition: successful workflow completion (no numeric score threshold)
+- Workflow-level token permissions: none by default; permissions are granted only at job scope
 
 ## Branch Protection Mapping
 
@@ -59,6 +61,18 @@ This document defines repository security automation operations for OSSF Scoreca
 - Ensure at least one workflow run has completed for the default branch.
 - Confirm the required check name matches exactly: OSSF Scorecard.
 - Confirm workflow file remains at .github/workflows/scorecard.yml.
+
+### StepSecurity reports broad token permissions
+
+- Keep workflow-level `permissions` empty and grant only job-level permissions required by Scorecard.
+- Avoid setting `security-events: write` at workflow scope.
+- Re-run the workflow after permission changes and verify the SARIF upload step still succeeds.
+
+### Scorecard or security review flags unpinned actions
+
+- Pin third-party and GitHub-maintained actions by full commit SHA instead of floating tags.
+- Keep a trailing comment with the human-readable tag for maintenance, for example `# v4.2.2`.
+- When updating an action, refresh both the SHA and the tag comment together.
 
 ### Scorecard job skipped on push
 
