@@ -16,12 +16,12 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@v4 # Node 24 compatible
         with:
           persist-credentials: false
 
       - name: Setup Go
-        uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0
+        uses: actions/setup-go@v5 # Node 24 compatible
         with:
           go-version-file: go.mod
 
@@ -29,7 +29,7 @@ jobs:
         run: go build -o actui ./cmd/actui
 
       - name: Upload artifact
-        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
+        uses: actions/upload-artifact@v4 # Node 24 compatible
         with:
           name: actui-linux-amd64
           path: actui

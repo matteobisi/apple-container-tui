@@ -21,6 +21,15 @@ Qualifying updates include merged feature work and merged dependency updates.
 - Current artifact: `actui-linux-amd64`
 - Retention policy: explicit `retention-days` configured in workflow
 
+## Action Dependencies
+
+The workflow uses GitHub Actions pinned to major versions (Node 24 compatible as of April 2026):
+- `actions/checkout@v4` (Node 24 compatible, automatic updates within v4 series)
+- `actions/setup-go@v5` (Node 24 compatible, automatic updates within v5 series)
+- `actions/upload-artifact@v4` (Node 24 compatible, automatic updates within v4 series)
+
+Version pinning ensures Node 24 compatibility while allowing security patches within major versions.
+
 ## Diagnostics and Run Review
 
 - Every run must show successful checkout, Go setup, build, and artifact upload steps.
