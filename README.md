@@ -168,6 +168,15 @@ Run tests:
 go test ./...
 ```
 
+## Repository Security Automation
+
+This repository uses GitHub-native security automation:
+
+- OSSF Scorecard workflow in [.github/workflows/scorecard.yml](.github/workflows/scorecard.yml)
+- Dependabot configuration in [.github/dependabot.yml](.github/dependabot.yml)
+
+Operational guidance, branch-protection mapping, and troubleshooting are documented in [docs/security-automation.md](docs/security-automation.md).
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
