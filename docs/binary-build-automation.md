@@ -23,10 +23,12 @@ Qualifying updates include merged feature work and merged dependency updates.
 
 ## Action Dependencies
 
-The workflow uses GitHub Actions pinned to specific versions (Node 24 compatible as of April 2026) for security and stability:
-- `actions/checkout@v4.1.7` (Node 24 compatible)
-- `actions/setup-go@v5.0.0` (Node 24 compatible)
-- `actions/upload-artifact@v4.4.0` (Node 24 compatible)
+The workflow uses GitHub Actions pinned to major versions (Node 24 compatible as of April 2026):
+- `actions/checkout@v4` (Node 24 compatible, automatic updates within v4 series)
+- `actions/setup-go@v5` (Node 24 compatible, automatic updates within v5 series)
+- `actions/upload-artifact@v4` (Node 24 compatible, automatic updates within v4 series)
+
+Version pinning ensures Node 24 compatibility while allowing security patches within major versions.
 
 ## Diagnostics and Run Review
 
