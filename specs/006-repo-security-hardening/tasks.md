@@ -88,7 +88,9 @@
 
 - [X] T019 [P] Verify consistency of workflow/check names across .github/workflows/scorecard.yml and docs/security-automation.md
 - [X] T020 [P] Verify consistency of Dependabot cadence and ecosystems across .github/dependabot.yml and docs/security-automation.md
-- [ ] T021 Validate the full implementation against specs/006-repo-security-hardening/quickstart.md
+- [X] T021 Validate the full implementation against specs/006-repo-security-hardening/quickstart.md
+
+Validation evidence (2026-04-01): required `OSSF Scorecard` check enforced on `main`, successful recent `Repository Security` PR runs observed, Dependabot (`gomod` + `github-actions`) active with security updates enabled, and branch protection enabled with force-push/delete disabled.
 
 ---
 
