@@ -30,7 +30,7 @@ This document defines repository security automation operations for OSSF Scoreca
 ### Scorecard
 
 1. Open a pull request and verify the OSSF Scorecard check appears.
-2. Verify the same workflow runs on push to the default branch.
+2. Verify the same workflow runs only on push to the default branch.
 3. Confirm that a non-success Scorecard result blocks merge while branch protection is enabled.
 
 ### Dependabot
@@ -74,10 +74,10 @@ This document defines repository security automation operations for OSSF Scoreca
 - Keep a trailing comment with the human-readable tag for maintenance, for example `# v4.2.2`.
 - When updating an action, refresh both the SHA and the tag comment together.
 
-### Scorecard job skipped on push
+### No Scorecard push run on a feature branch
 
-- Confirm push is to the repository default branch.
-- Check workflow condition logic in the ossf-scorecard job.
+- This is expected: push-triggered Scorecard runs are limited to `main`.
+- Pull requests still run the `OSSF Scorecard` check normally.
 
 ### Dependabot not opening updates
 
