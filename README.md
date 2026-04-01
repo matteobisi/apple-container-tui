@@ -32,9 +32,9 @@ For AI-oriented navigation and UI ownership guidance, see [AGENTS.md](AGENTS.md)
 ## Features
 
 - Container list with container action submenus (start/stop/logs/shell)
-- Stopped-container export workflow with command preview and optional cleanup confirmation
+- Stopped-container export workflow with destination selection, command preview, and optional cleanup confirmation
 - Safe delete with type-to-confirm
-- Image management screen (`i`) with list/pull/build/prune/registries
+- Image management screen (`i`) with list/pull/build/prune and dedicated registries view
 - Image submenu with inspect/delete
 - Build form pull toggle enabled by default
 - Daemon start/stop controls with structured status parsing and unknown fallback
@@ -175,7 +175,24 @@ This repository uses GitHub-native security automation:
 - OSSF Scorecard workflow in [.github/workflows/scorecard.yml](.github/workflows/scorecard.yml)
 - Dependabot configuration in [.github/dependabot.yml](.github/dependabot.yml)
 
+Enforcement baseline on `main`:
+
+- Required status check: `OSSF Scorecard`
+- Branch protection enabled (force-push and deletion blocked)
+- Dependabot security updates enabled
+
 Operational guidance, branch-protection mapping, and troubleshooting are documented in [docs/security-automation.md](docs/security-automation.md).
+
+## Contribution Workflow
+
+All changes (human or AI-authored) should follow the same repository workflow:
+
+1. Create a new branch from `main`
+2. Commit focused changes with clear messages
+3. Open a pull request to `main`
+4. Wait for required checks to pass before merge
+
+Direct pushes to `main` are not part of the normal workflow.
 
 ## License
 
