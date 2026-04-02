@@ -46,14 +46,18 @@ jobs:
           run-id: ${{ github.event.workflow_run.id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      # T007 (continued): Hard-fail if the expected artifact is missing so diagnostics are immediate.
-      - name: Verify artifact
+      # T007 (continued): The artifact wraps a file named 'actui' (from go build -o actui).
+      # Verify it arrived and rename to the release asset name for publication.
+      - name: Verify and rename artifact
         run: |
-          if [ ! -f "release-assets/actui-linux-amd64" ]; then
-            echo "::error::Artifact 'actui-linux-amd64' not found in release-assets/. Cannot publish release."
+          if [ ! -f "release-assets/actui" ]; then
+            echo "::error::Artifact file 'actui' not found in release-assets/. Cannot publish release."
+            ls -la release-assets/ || true
             exit 1
           fi
-          echo "Artifact verified: $(ls -lh release-assets/actui-linux-amd64)"
+          mv release-assets/actui release-assets/actui-linux-amd64
+          chmod +x release-assets/actui-linux-amd64
+          echo "Artifact verified and renamed: $(ls -lh release-assets/actui-linux-amd64)"
 
       # T011 (US2): Compute the next patch version tag from existing releases.
       # Fallback to v0.1.0 when no prior automated release exists.
