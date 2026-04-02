@@ -1,6 +1,6 @@
 # container-tui Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-04-01
+Auto-generated from all feature plans. Last updated: 2026-04-02
 
 ## Active Technologies
 - Local filesystem (config.toml, JSONL logs) (001-rename-binary-actui)
@@ -17,6 +17,8 @@ Auto-generated from all feature plans. Last updated: 2026-04-01
 - GitHub Actions artifact storage and repository documentation files (007-build-binary-action)
 - Go 1.21+ for build command; GitHub Actions YAML for automation + `actions/checkout`, `actions/setup-go`, `actions/upload-artifact`, Go toolchain from `go.mod` (007-build-binary-action)
 - GitHub Actions artifact storage and repository Markdown docs in `docs/` (007-build-binary-action)
+- GitHub Actions YAML workflows plus shell scripting on Ubuntu runners + `actions/checkout@v4`, `actions/setup-go@v5`, `actions/upload-artifact@v4`, GitHub CLI/API release actions (`actions/download-artifact`, `softprops/action-gh-release` or equivalent) (010-auto-release-publish)
+- GitHub Actions artifact storage and GitHub Releases assets; repository Markdown docs in `docs/` (010-auto-release-publish)
 
 - Go 1.21+ (chosen for optimal balance of productivity, performance, binary distribution, and TUI library maturity) + Bubbletea v1.2.4 (TUI framework), Lipgloss v1.0.0 (styling), Bubbles v0.20.0 (UI components), Cobra (CLI), Viper (config management) (001-apple-container-tui)
 
@@ -36,9 +38,9 @@ tests/
 Go 1.21+ (chosen for optimal balance of productivity, performance, binary distribution, and TUI library maturity): Follow standard conventions
 
 ## Recent Changes
+- 010-auto-release-publish: Added GitHub Actions YAML workflows plus shell scripting on Ubuntu runners + `actions/checkout@v4`, `actions/setup-go@v5`, `actions/upload-artifact@v4`, GitHub CLI/API release actions (`actions/download-artifact`, `softprops/action-gh-release` or equivalent)
 - 007-build-binary-action: Added Go 1.21+ for build command; GitHub Actions YAML for automation + `actions/checkout`, `actions/setup-go`, `actions/upload-artifact`, Go toolchain from `go.mod`
 - 007-build-binary-action: Added Go 1.21+ for project build, GitHub Actions workflow YAML + `actions/checkout`, `actions/setup-go`, `actions/upload-artifact`, Go toolchain from `go.mod`
-- 006-repo-security-hardening: Added YAML (GitHub Actions workflow and Dependabot configuration), Go 1.21 module context for dependency ecosystem detection + GitHub Actions runner (`ubuntu-latest`), OSSF Scorecard GitHub Action, Dependabot version updates engine
 
 
 <!-- MANUAL ADDITIONS START -->
