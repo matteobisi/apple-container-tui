@@ -1,0 +1,128 @@
+name: Publish Release
+
+# Triggered by workflow_run on successful completion of "Build Binary".
+# Downloads the actui-linux-amd64 artifact from the triggering run,
+# computes the next semantic version tag (patch increment from latest release,
+# starting at v0.1.0), enforces idempotency, and publishes a GitHub Release.
+#
+# Actions used (all Node 24 compatible as of April 2026):
+#   actions/checkout@v4        — Node 24 compatible
+#   actions/download-artifact@v4 — Node 24 compatible; supports cross-run download via run-id
+#   gh (GitHub CLI)            — pre-installed on ubuntu-latest, no Node.js runtime dependency
+
+on:
+  workflow_run:
+    workflows:
+      - "Build Binary"
+    types:
+      - completed
+
+permissions:
+  actions: read   # required to download artifacts from triggering workflow run
+  contents: write # required to create releases and upload release assets
+
+jobs:
+  publish:
+    name: Publish GitHub Release
+    runs-on: ubuntu-latest
+    # Skip entirely when the triggering build did not succeed
+    if: github.event.workflow_run.conclusion == 'success'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4 # Node 24 compatible
+        with:
+          persist-credentials: false
+          fetch-tags: true
+
+      # T007: Download actui-linux-amd64 from the triggering workflow run.
+      # run-id targets the specific build run; github-token is required for cross-run access.
+      - name: Download artifact actui-linux-amd64
+        uses: actions/download-artifact@v4 # Node 24 compatible; cross-run download via run-id
+        with:
+          name: actui-linux-amd64
+          path: release-assets/
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      # T007 (continued): Hard-fail if the expected artifact is missing so diagnostics are immediate.
+      - name: Verify artifact
+        run: |
+          if [ ! -f "release-assets/actui-linux-amd64" ]; then
+            echo "::error::Artifact 'actui-linux-amd64' not found in release-assets/. Cannot publish release."
+            exit 1
+          fi
+          echo "Artifact verified: $(ls -lh release-assets/actui-linux-amd64)"
+
+      # T011 (US2): Compute the next patch version tag from existing releases.
+      # Fallback to v0.1.0 when no prior automated release exists.
+      - name: Compute next version tag
+        id: compute-version
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Querying existing release tags..."
+          LATEST_TAG=$(gh release list --limit 100 --json tagName --jq '.[].tagName' 2>/dev/null \
+            | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' \
+            | sort -V \
+            | tail -1 || true)
+
+          if [ -z "$LATEST_TAG" ]; then
+            NEXT_TAG="v0.1.0"
+            echo "No prior automated release found. Starting at ${NEXT_TAG}."
+          else
+            MAJOR=$(echo "$LATEST_TAG" | cut -d. -f1 | tr -d 'v')
+            MINOR=$(echo "$LATEST_TAG" | cut -d. -f2)
+            PATCH=$(echo "$LATEST_TAG" | cut -d. -f3)
+            NEXT_PATCH=$((PATCH + 1))
+            NEXT_TAG="v${MAJOR}.${MINOR}.${NEXT_PATCH}"
+            echo "Latest release tag : ${LATEST_TAG}"
+            echo "Next release tag   : ${NEXT_TAG}"
+          fi
+
+          echo "tag_name=${NEXT_TAG}" >> "$GITHUB_OUTPUT"
+
+      # T008 + T013 (US1 + US2): Check for an existing release with the computed tag.
+      # Skips publication without error to enforce idempotency on reruns.
+      - name: Check for duplicate release
+        id: idempotency-check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ steps.compute-version.outputs.tag_name }}"
+          echo "Checking for existing release with tag '${TAG}'..."
+
+          if gh release view "$TAG" &>/dev/null; then
+            echo "::notice::Release '${TAG}' already exists. Skipping publication (idempotency enforced)."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No existing release '${TAG}'. Proceeding with publication."
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # T009 (US1): Create the GitHub Release and upload the binary asset.
+      # Uses the source commit SHA from the triggering build as the release target.
+      - name: Publish release
+        if: steps.idempotency-check.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BUILD_SHA: ${{ github.event.workflow_run.head_sha }}
+          BUILD_RUN_URL: ${{ github.event.workflow_run.html_url }}
+        run: |
+          TAG="${{ steps.compute-version.outputs.tag_name }}"
+          TITLE="Release ${TAG}"
+
+          echo "Publishing release '${TAG}'..."
+          echo "Source build : ${BUILD_RUN_URL}"
+          echo "Source commit: ${BUILD_SHA}"
+
+          gh release create "$TAG" \
+            release-assets/actui-linux-amd64 \
+            --title "$TITLE" \
+            --generate-notes \
+            --target "$BUILD_SHA"
+
+          RELEASE_URL=$(gh release view "$TAG" --json url --jq .url)
+          echo "Release '${TAG}' published successfully."
+          echo "Release URL  : ${RELEASE_URL}"
+          echo "Asset        : actui-linux-amd64"
