@@ -10,6 +10,8 @@ This document defines repository security automation operations for OSSF Scoreca
 - Dependabot cadence: monthly for security and version updates
 - Workflow actions are pinned to immutable commit SHAs where practical
 - SBOM (SPDX 2.3 JSON) is generated on every build and attached to GitHub Releases — satisfies the Scorecard `SBOM` check (10/10)
+- Root `SECURITY.md` publishes the vulnerability disclosure policy — satisfies the Scorecard `Security-Policy` check (10/10)
+- Release provenance attestations are generated for published assets via GitHub Actions — improves the Scorecard `Signed-Releases` check
 
 ## Canonical Required Check
 
@@ -33,6 +35,21 @@ This document defines repository security automation operations for OSSF Scoreca
 1. Open a pull request and verify the OSSF Scorecard check appears.
 2. Verify the same workflow runs only on push to the default branch.
 3. Confirm that a non-success Scorecard result blocks merge while branch protection is enabled.
+4. Confirm the repository root contains `SECURITY.md`.
+5. After the next published release, confirm the Scorecard `Signed-Releases` check is non-zero.
+
+### Security Policy
+
+1. Verify `SECURITY.md` exists at the repository root.
+2. Confirm it documents a private reporting channel, supported versions, and a response timeline.
+3. Confirm GitHub shows the repository Security Policy link after merge.
+
+### Release Provenance
+
+1. Confirm `.github/workflows/publish-release.yml` grants `id-token: write` and `attestations: write` at job scope.
+2. Confirm the workflow uses `actions/attest-build-provenance` pinned by SHA.
+3. After the next release, verify the released binary with `gh attestation verify <artifact> --repo matteobisi/apple-container-tui`.
+4. Repeat verification for the SBOM asset.
 
 ### Dependabot
 
@@ -74,6 +91,18 @@ This document defines repository security automation operations for OSSF Scoreca
 - Pin third-party and GitHub-maintained actions by full commit SHA instead of floating tags.
 - Keep a trailing comment with the human-readable tag for maintenance, for example `# v4.2.2`.
 - When updating an action, refresh both the SHA and the tag comment together.
+
+### Security policy file not detected
+
+- Confirm the file is named exactly `SECURITY.md`.
+- Confirm it is located at the repository root, `.github/SECURITY.md`, or `docs/SECURITY.md`.
+- After merge, wait for the next Scorecard run or trigger one manually.
+
+### Attestation verification fails
+
+- Confirm the `Publish Release` workflow granted both `id-token: write` and `attestations: write`.
+- Confirm the release run created a new release rather than skipping due to idempotency.
+- Verify the asset name passed to `gh attestation verify` matches the published release asset exactly.
 
 ### No Scorecard push run on a feature branch
 
