@@ -44,7 +44,6 @@ Go 1.21+ (chosen for optimal balance of productivity, performance, binary distri
 
 ## Recent Changes
 - 012-security-hardening-quick-wins: Added Go 1.24 (TUI application); YAML (GitHub Actions workflows); Markdown (SECURITY.md) + `actions/attest-build-provenance@a2bbfa25375fe432b6a289bc6b6cd05ecd0c4c32` (v4.1.0, Node 24 compatible)
-- 012-security-hardening-quick-wins: Added Go 1.24 (TUI application); YAML (GitHub Actions workflows); Markdown (SECURITY.md) + `actions/attest-build-provenance@a2bbfa25375fe432b6a289bc6b6cd05ecd0c4c32` (v4.1.0, Node 24 compatible)
 - 012-security-hardening-quick-wins: Added N/A (no Go/Python source changes) + GitHub Actions — `actions/attest-build-provenance@a2bbfa25375fe432b6a289bc6b6cd05ecd0c4c32` (v4.1.0, Node 24 compatible); Docker Hub — `python:3.13-slim-bullseye`
 
 
