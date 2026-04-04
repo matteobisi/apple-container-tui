@@ -9,6 +9,7 @@ This document defines repository security automation operations for OSSF Scoreca
 - Ecosystems in scope: gomod, github-actions
 - Dependabot cadence: monthly for security and version updates
 - Workflow actions are pinned to immutable commit SHAs where practical
+- SBOM (SPDX 2.3 JSON) is generated on every build and attached to GitHub Releases — satisfies the Scorecard `SBOM` check (10/10)
 
 ## Canonical Required Check
 

@@ -16,6 +16,7 @@ Working rules for agents:
 - Prefer extending an existing workflow when the new behavior clearly belongs to an existing menu branch
 - Keep service builders/parsers in [src/services](src/services) aligned with the UI flow that calls them
 - Update [docs/ai-menu-map.md](docs/ai-menu-map.md) whenever screens, entry points, or major UI ownership change
+- After implementing any feature, always update all relevant documentation: README.md sections that describe affected functionality, and any file under docs/ that covers the same area (e.g., docs/binary-build-automation.md for build/release changes, docs/security-automation.md for security-related changes)
 - Agents MUST always work on a non-main branch, commit their changes, and open a pull request to `main` for approval
 - Agents MUST NOT push directly to `main`; pull-request review plus required checks is the only enabled workflow
 ## GitHub Actions Node version policy
