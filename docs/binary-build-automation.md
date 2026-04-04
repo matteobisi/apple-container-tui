@@ -6,7 +6,7 @@ This runbook describes how the repository builds and validates the `actui` binar
 
 - Workflow file: `.github/workflows/build-binary.yml`
 - Workflow name: `Build Binary`
-- Build command: `go build -o actui ./cmd/actui`
+- Build command: `GOOS=darwin GOARCH=arm64 go build -o actui ./cmd/actui`
 
 ## Qualifying Triggers
 
@@ -18,7 +18,7 @@ Qualifying updates include merged feature work and merged dependency updates.
 ## Artifact Contract
 
 - Artifact name format: `actui-<os>-<arch>`
-- Current artifact: `actui-linux-amd64`
+- Current artifact: `actui-darwin-arm64`
 - Retention policy: explicit `retention-days` configured in workflow
 
 ## SBOM Generation
@@ -29,22 +29,22 @@ Every successful build produces a Software Bill of Materials (SBOM) alongside th
 |---|---|
 | Generator | `anchore/sbom-action` (Syft) |
 | Format | SPDX 2.3 JSON |
-| Output file | `actui-linux-amd64.spdx.json` |
-| Workflow artifact name | `actui-linux-amd64-sbom` |
+| Output file | `actui-darwin-arm64.spdx.json` |
+| Workflow artifact name | `actui-darwin-arm64-sbom` |
 | Retention policy | 14 days (same as binary artifact) |
-| Release asset name | `actui-linux-amd64.spdx.json` |
+| Release asset name | `actui-darwin-arm64.spdx.json` |
 
 ### SBOM Trigger and Flow
 
 The SBOM is generated immediately after `go build` completes, before any upload steps:
 
 ```
-go build -o actui ./cmd/actui
-  → anchore/sbom-action writes actui-linux-amd64.spdx.json
-    → upload-artifact uploads as 'actui-linux-amd64-sbom'
+ GOOS=darwin GOARCH=arm64 go build -o actui ./cmd/actui
+  → anchore/sbom-action writes actui-darwin-arm64.spdx.json
+    → upload-artifact uploads as 'actui-darwin-arm64-sbom'
       → Publish Release workflow downloads both artifacts
         → SBOM verified (jq format check) before release
-          → actui-linux-amd64.spdx.json attached to GitHub Release
+          → actui-darwin-arm64.spdx.json attached to GitHub Release
 ```
 
 ### SBOM Verification
@@ -53,7 +53,7 @@ The publish workflow verifies the SBOM before attaching it to the release:
 
 ```sh
 # Quick format check: confirms the file is valid JSON
-jq empty release-assets/actui-linux-amd64.spdx.json
+jq empty release-assets/actui-darwin-arm64.spdx.json
 ```
 
 A non-zero exit code (missing file or invalid JSON) will fail the publish job before the release is created.
@@ -115,7 +115,7 @@ push to main
   → Build Binary workflow (.github/workflows/build-binary.yml)
     → job "Build actui binary" success
       → Publish Release workflow (.github/workflows/publish-release.yml) triggered via workflow_run
-        → GitHub Release created with actui-linux-amd64 attached
+        → GitHub Release created with actui-darwin-arm64 attached
 ```
 
 Workflow file: `.github/workflows/publish-release.yml`  
@@ -165,7 +165,7 @@ This is not an error. The workflow run will show as completed successfully.
 **Artifact not found**
 
 ```
-Error: Artifact 'actui-linux-amd64' not found in release-assets/
+Error: Artifact 'actui-darwin-arm64' not found in release-assets/
 ```
 
 - The `Build Binary` run did not upload the artifact, or the artifact has expired.
@@ -198,10 +198,10 @@ The `::notice::` log line is informational. If you need a new release despite th
 Use this checklist after enabling or modifying the release automation:
 
 1. `Publish Release` workflow is enabled in repository Actions settings.
-2. Artifact name in `publish-release.yml` matches `actui-linux-amd64` (matches `build-binary.yml`).
+2. Artifact name in `publish-release.yml` matches `actui-darwin-arm64` (matches `build-binary.yml`).
 3. Trigger a qualifying push to `main` and confirm `Build Binary` succeeds.
 4. Confirm `Publish Release` workflow starts after `Build Binary` completes.
 5. Verify the new release appears in GitHub Releases with the expected version tag (e.g., `v0.1.0`).
-6. Verify `actui-linux-amd64` is attached as a release asset.
+6. Verify `actui-darwin-arm64` is attached as a release asset.
 7. Rerun the same `Publish Release` run and confirm the duplicate-tag notice appears and no second release is created.
 8. Review workflow logs to confirm all stage log lines are present (artifact, version, idempotency, publication).

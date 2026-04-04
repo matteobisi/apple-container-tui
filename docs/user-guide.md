@@ -29,7 +29,7 @@ go mod download
 go build -o actui ./cmd/actui
 ```
 
-The same build command is used by CI in the `Build Binary` workflow to keep local and automated builds aligned.
+CI produces the release artifact as the macOS Apple Silicon binary `actui-darwin-arm64` (`GOOS=darwin GOARCH=arm64`) in the `Build Binary` workflow.
 
 For CI trigger behavior, artifact retention, and troubleshooting, see `docs/binary-build-automation.md`.
 
