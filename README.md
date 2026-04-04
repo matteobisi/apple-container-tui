@@ -187,7 +187,7 @@ Operational guidance, branch-protection mapping, and troubleshooting are documen
 
 Build workflow operations, SBOM generation, retention policy, and troubleshooting are documented in [docs/binary-build-automation.md](docs/binary-build-automation.md).
 
-Release publication is automated: a successful build on `main` automatically triggers the `Publish Release` workflow, which applies a deterministic semantic version tag (`v0.1.0`, `v0.1.1`, …) and publishes a GitHub Release with the `actui-linux-amd64` binary and an `actui-linux-amd64.spdx.json` SBOM (SPDX 2.3 JSON) attached. The full trigger chain, version-labeling policy, SBOM generation details, duplicate handling, and operator validation checklist are all in [docs/binary-build-automation.md](docs/binary-build-automation.md).
+Release publication is automated: a successful build on `main` automatically triggers the `Publish Release` workflow, which applies a deterministic semantic version tag (`v0.1.0`, `v0.1.1`, …) and publishes a GitHub Release with the `actui-darwin-arm64` macOS Apple Silicon binary and an `actui-darwin-arm64.spdx.json` SBOM (SPDX 2.3 JSON) attached. The full trigger chain, version-labeling policy, SBOM generation details, duplicate handling, and operator validation checklist are all in [docs/binary-build-automation.md](docs/binary-build-automation.md).
 
 ## Contribution Workflow
 

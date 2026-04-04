@@ -26,7 +26,7 @@ jobs:
           go-version-file: go.mod
 
       - name: Build actui
-        run: go build -o actui ./cmd/actui
+        run: GOOS=darwin GOARCH=arm64 go build -o actui ./cmd/actui
 
       # T003 (US1): Generate SBOM from the repository source tree immediately after the binary
       # is compiled. Syft resolves the full Go module dependency graph from go.mod/go.sum
@@ -36,13 +36,13 @@ jobs:
         uses: anchore/sbom-action@fd74a6fb98a204a1ad35bbfae0122c1a302ff88b # v0.15.0, composite action
         with:
           format: spdx-json
-          output-file: actui-linux-amd64.spdx.json
+          output-file: actui-darwin-arm64.spdx.json
           upload-artifact: false
 
       - name: Upload artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2, Node 24 compatible
         with:
-          name: actui-linux-amd64
+          name: actui-darwin-arm64
           path: actui
           if-no-files-found: error
           retention-days: 14
@@ -52,7 +52,7 @@ jobs:
       - name: Upload SBOM artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2, Node 24 compatible
         with:
-          name: actui-linux-amd64-sbom
-          path: actui-linux-amd64.spdx.json
+          name: actui-darwin-arm64-sbom
+          path: actui-darwin-arm64.spdx.json
           if-no-files-found: error
           retention-days: 14
