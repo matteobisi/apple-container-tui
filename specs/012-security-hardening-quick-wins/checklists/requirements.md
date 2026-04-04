@@ -32,6 +32,7 @@
 ## Notes
 
 - All items pass. Spec is ready for `/speckit.plan`.
-- Three independent user stories map directly to the three Scorecard checks: Security-Policy (P1), Pinned-Dependencies (P2), Signed-Releases (P3).
-- Each story is independently testable and deployable without the others.
+- Two independent user stories are defined in this spec: Security-Policy (P1) via `SECURITY.md`, and Signed-Releases (P3) via provenance attestation.
+- Pinned-Dependencies (P2) is acknowledged in the Scorecard context but is already resolved via Dockerfile removal, so it is not a separate user story in this spec.
+- Both defined stories are independently testable and deployable without requiring the other.
 - No clarification questions were needed; all decisions had clear defaults based on the provided Scorecard report and AGENTS.md policy.
