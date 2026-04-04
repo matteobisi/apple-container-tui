@@ -115,7 +115,8 @@ push to main
   → Build Binary workflow (.github/workflows/build-binary.yml)
     → job "Build actui binary" success
       → Publish Release workflow (.github/workflows/publish-release.yml) triggered via workflow_run
-        → GitHub Release created with actui-darwin-arm64 attached
+        → GitHub Release created with actui-darwin-arm64 and actui-darwin-arm64.spdx.json attached
+          → GitHub provenance attestation generated for both release assets
 ```
 
 Workflow file: `.github/workflows/publish-release.yml`  
@@ -123,6 +124,20 @@ Workflow name: `Publish Release`
 Trigger: `workflow_run` on `Build Binary`, type `completed`, gated on `conclusion == success`
 
 If the build fails or is cancelled, the `Publish Release` workflow job is skipped automatically (no release is created).
+
+### Release Provenance Attestation
+
+After a new release is created, the same workflow generates keyless provenance attestations for both release assets using GitHub's built-in OIDC identity and attestations store.
+
+| Property | Value |
+|---|---|
+| Action | `actions/attest-build-provenance` |
+| Pinned version | `a2bbfa25375fe432b6a289bc6b6cd05ecd0c4c32` (v4.1.0) |
+| Attested assets | `actui-darwin-arm64`, `actui-darwin-arm64.spdx.json` |
+| Required permissions | `id-token: write`, `attestations: write` |
+| Verification command | `gh attestation verify <artifact> --repo matteobisi/apple-container-tui` |
+
+The attestation step is gated by the same idempotency check as release publication, so reruns that skip duplicate release creation do not generate duplicate attestation attempts.
 
 ### Version Labeling Policy
 
@@ -179,8 +194,18 @@ gh: HTTP 403: Resource not accessible by integration
 ```
 
 - The `GITHUB_TOKEN` lacks `contents: write` permission.
-- Verify the `Publish Release` workflow has `permissions: contents: write` set at the workflow level.
+- Verify the `Publish Release` workflow has `permissions: contents: write` set at the job level.
 - Check repository Settings → Actions → General → Workflow permissions for the default token scope.
+
+**Attestation permission error**
+
+```
+Error: Resource not accessible by integration
+```
+
+- Verify the `publish` job grants both `id-token: write` and `attestations: write`.
+- Confirm the attestation step runs after the release is created and is not skipped by idempotency.
+- Re-run the workflow only after confirming a new release will actually be published.
 
 **Duplicate tag skip (not an error)**
 
@@ -203,5 +228,7 @@ Use this checklist after enabling or modifying the release automation:
 4. Confirm `Publish Release` workflow starts after `Build Binary` completes.
 5. Verify the new release appears in GitHub Releases with the expected version tag (e.g., `v0.1.0`).
 6. Verify `actui-darwin-arm64` is attached as a release asset.
-7. Rerun the same `Publish Release` run and confirm the duplicate-tag notice appears and no second release is created.
-8. Review workflow logs to confirm all stage log lines are present (artifact, version, idempotency, publication).
+7. Verify `actui-darwin-arm64.spdx.json` is attached as a release asset.
+8. Verify both assets with `gh attestation verify` against `matteobisi/apple-container-tui`.
+9. Rerun the same `Publish Release` run and confirm the duplicate-tag notice appears and no second release or attestation is created.
+10. Review workflow logs to confirm all stage log lines are present (artifact, version, idempotency, publication, attestation).

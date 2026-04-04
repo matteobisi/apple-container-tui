@@ -21,6 +21,9 @@ Auto-generated from all feature plans. Last updated: 2026-04-04
 - GitHub Actions artifact storage and GitHub Releases assets; repository Markdown docs in `docs/` (010-auto-release-publish)
 - Go 1.24.2 (module `container-tui`) + `anchore/sbom-action` (Syft, composite GHA); existing: `actions/checkout`, `actions/setup-go`, `actions/upload-artifact`, `actions/download-artifact` (011-sbom-binary-build)
 - GitHub Actions workflow artifacts (14-day retention) + GitHub Release assets (permanent) (011-sbom-binary-build)
+- N/A (no Go/Python source changes) + GitHub Actions — `actions/attest-build-provenance@a2bbfa25375fe432b6a289bc6b6cd05ecd0c4c32` (v4.1.0, Node 24 compatible); Docker Hub — `python:3.13-slim-bullseye` (012-security-hardening-quick-wins)
+- Go 1.24 (TUI application); YAML (GitHub Actions workflows); Markdown (SECURITY.md) + `actions/attest-build-provenance@a2bbfa25375fe432b6a289bc6b6cd05ecd0c4c32` (v4.1.0, Node 24 compatible) (012-security-hardening-quick-wins)
+- N/A — no runtime storage changes (012-security-hardening-quick-wins)
 
 - Go 1.21+ (chosen for optimal balance of productivity, performance, binary distribution, and TUI library maturity) + Bubbletea v1.2.4 (TUI framework), Lipgloss v1.0.0 (styling), Bubbles v0.20.0 (UI components), Cobra (CLI), Viper (config management) (001-apple-container-tui)
 
@@ -40,9 +43,9 @@ tests/
 Go 1.21+ (chosen for optimal balance of productivity, performance, binary distribution, and TUI library maturity): Follow standard conventions
 
 ## Recent Changes
-- 011-sbom-binary-build: Added Go 1.24.2 (module `container-tui`) + `anchore/sbom-action` (Syft, composite GHA); existing: `actions/checkout`, `actions/setup-go`, `actions/upload-artifact`, `actions/download-artifact`
-- 010-auto-release-publish: Added GitHub Actions YAML workflows plus shell scripting on Ubuntu runners + `actions/checkout@v4`, `actions/setup-go@v5`, `actions/upload-artifact@v4`, GitHub CLI/API release actions (`actions/download-artifact`, `softprops/action-gh-release` or equivalent)
-- 007-build-binary-action: Added Go 1.21+ for build command; GitHub Actions YAML for automation + `actions/checkout`, `actions/setup-go`, `actions/upload-artifact`, Go toolchain from `go.mod`
+- 012-security-hardening-quick-wins: Added Go 1.24 (TUI application); YAML (GitHub Actions workflows); Markdown (SECURITY.md) + `actions/attest-build-provenance@a2bbfa25375fe432b6a289bc6b6cd05ecd0c4c32` (v4.1.0, Node 24 compatible)
+- 012-security-hardening-quick-wins: Added Go 1.24 (TUI application); YAML (GitHub Actions workflows); Markdown (SECURITY.md) + `actions/attest-build-provenance@a2bbfa25375fe432b6a289bc6b6cd05ecd0c4c32` (v4.1.0, Node 24 compatible)
+- 012-security-hardening-quick-wins: Added N/A (no Go/Python source changes) + GitHub Actions — `actions/attest-build-provenance@a2bbfa25375fe432b6a289bc6b6cd05ecd0c4c32` (v4.1.0, Node 24 compatible); Docker Hub — `python:3.13-slim-bullseye`
 
 
 <!-- MANUAL ADDITIONS START -->
