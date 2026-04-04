@@ -21,14 +21,56 @@ Qualifying updates include merged feature work and merged dependency updates.
 - Current artifact: `actui-linux-amd64`
 - Retention policy: explicit `retention-days` configured in workflow
 
+## SBOM Generation
+
+Every successful build produces a Software Bill of Materials (SBOM) alongside the binary. The SBOM captures the full Go module dependency graph resolved from `go.mod`/`go.sum` at build time.
+
+| Property | Value |
+|---|---|
+| Generator | `anchore/sbom-action` (Syft) |
+| Format | SPDX 2.3 JSON |
+| Output file | `actui-linux-amd64.spdx.json` |
+| Workflow artifact name | `actui-linux-amd64-sbom` |
+| Retention policy | 14 days (same as binary artifact) |
+| Release asset name | `actui-linux-amd64.spdx.json` |
+
+### SBOM Trigger and Flow
+
+The SBOM is generated immediately after `go build` completes, before any upload steps:
+
+```
+go build -o actui ./cmd/actui
+  → anchore/sbom-action writes actui-linux-amd64.spdx.json
+    → upload-artifact uploads as 'actui-linux-amd64-sbom'
+      → Publish Release workflow downloads both artifacts
+        → SBOM verified (jq format check) before release
+          → actui-linux-amd64.spdx.json attached to GitHub Release
+```
+
+### SBOM Verification
+
+The publish workflow verifies the SBOM before attaching it to the release:
+
+```sh
+# Quick format check: confirms the file is valid JSON
+jq empty release-assets/actui-linux-amd64.spdx.json
+```
+
+A non-zero exit code (missing file or invalid JSON) will fail the publish job before the release is created.
+
+### Scorecard Relevance
+
+Attaching the SPDX 2.3 JSON file to the GitHub Release satisfies the OSSF Scorecard **SBOM** check (score: 0 → 10). Pinning all actions to immutable commit SHAs also improves the **Pinned-Dependencies** check score.
+
 ## Action Dependencies
 
-The workflow uses GitHub Actions pinned to major versions (Node 24 compatible as of April 2026):
-- `actions/checkout@v4` (Node 24 compatible, automatic updates within v4 series)
-- `actions/setup-go@v5` (Node 24 compatible, automatic updates within v5 series)
-- `actions/upload-artifact@v4` (Node 24 compatible, automatic updates within v4 series)
+The workflow uses GitHub Actions pinned to immutable commit SHAs (Node 24 compatible as of April 2026):
+- `actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683` (v4.2.2)
+- `actions/setup-go@f111f3307d8850f501ac008e886eec1fd1932a34` (v5.3.0)
+- `actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02` (v4.6.2)
+- `anchore/sbom-action@fd74a6fb98a204a1ad35bbfae0122c1a302ff88b` (v0.15.0, composite action)
 
-Version pinning ensures Node 24 compatibility while allowing security patches within major versions.
+Pinning to commit SHAs rather than mutable tags ensures immutable, reproducible builds and improves the OSSF Scorecard Pinned-Dependencies check.
 
 ## Diagnostics and Run Review
 
