@@ -152,7 +152,7 @@
 
 **Purpose**: Confirm the full pipeline works together from push to release.
 
-- [ ] T009 Trigger the `Build Binary` workflow via `workflow_dispatch` and execute all verification steps from `specs/011-sbom-binary-build/quickstart.md` in sequence: (1) confirm both artifacts in the workflow run, (2) download and inspect `actui-linux-amd64-sbom`, (3) verify SPDX JSON content with `jq`, (4) after the triggered `Publish Release` run completes, confirm both release assets on the Releases page, (5) note whether Scorecard `SBOM` and `Pinned-Dependencies` checks improved.
+- [x] T009 Trigger the `Build Binary` workflow via `workflow_dispatch` and execute all verification steps from `specs/011-sbom-binary-build/quickstart.md` in sequence: (1) confirm both artifacts in the workflow run, (2) download and inspect `actui-linux-amd64-sbom`, (3) verify SPDX JSON content with `jq`, (4) after the triggered `Publish Release` run completes, confirm both release assets on the Releases page, (5) note whether Scorecard `SBOM` and `Pinned-Dependencies` checks improved.
 
 ---
 

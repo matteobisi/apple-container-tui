@@ -1,6 +1,6 @@
 # container-tui Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-04-02
+Auto-generated from all feature plans. Last updated: 2026-04-04
 
 ## Active Technologies
 - Local filesystem (config.toml, JSONL logs) (001-rename-binary-actui)
@@ -19,6 +19,8 @@ Auto-generated from all feature plans. Last updated: 2026-04-02
 - GitHub Actions artifact storage and repository Markdown docs in `docs/` (007-build-binary-action)
 - GitHub Actions YAML workflows plus shell scripting on Ubuntu runners + `actions/checkout@v4`, `actions/setup-go@v5`, `actions/upload-artifact@v4`, GitHub CLI/API release actions (`actions/download-artifact`, `softprops/action-gh-release` or equivalent) (010-auto-release-publish)
 - GitHub Actions artifact storage and GitHub Releases assets; repository Markdown docs in `docs/` (010-auto-release-publish)
+- Go 1.24.2 (module `container-tui`) + `anchore/sbom-action` (Syft, composite GHA); existing: `actions/checkout`, `actions/setup-go`, `actions/upload-artifact`, `actions/download-artifact` (011-sbom-binary-build)
+- GitHub Actions workflow artifacts (14-day retention) + GitHub Release assets (permanent) (011-sbom-binary-build)
 
 - Go 1.21+ (chosen for optimal balance of productivity, performance, binary distribution, and TUI library maturity) + Bubbletea v1.2.4 (TUI framework), Lipgloss v1.0.0 (styling), Bubbles v0.20.0 (UI components), Cobra (CLI), Viper (config management) (001-apple-container-tui)
 
@@ -38,9 +40,9 @@ tests/
 Go 1.21+ (chosen for optimal balance of productivity, performance, binary distribution, and TUI library maturity): Follow standard conventions
 
 ## Recent Changes
+- 011-sbom-binary-build: Added Go 1.24.2 (module `container-tui`) + `anchore/sbom-action` (Syft, composite GHA); existing: `actions/checkout`, `actions/setup-go`, `actions/upload-artifact`, `actions/download-artifact`
 - 010-auto-release-publish: Added GitHub Actions YAML workflows plus shell scripting on Ubuntu runners + `actions/checkout@v4`, `actions/setup-go@v5`, `actions/upload-artifact@v4`, GitHub CLI/API release actions (`actions/download-artifact`, `softprops/action-gh-release` or equivalent)
 - 007-build-binary-action: Added Go 1.21+ for build command; GitHub Actions YAML for automation + `actions/checkout`, `actions/setup-go`, `actions/upload-artifact`, Go toolchain from `go.mod`
-- 007-build-binary-action: Added Go 1.21+ for project build, GitHub Actions workflow YAML + `actions/checkout`, `actions/setup-go`, `actions/upload-artifact`, Go toolchain from `go.mod`
 
 
 <!-- MANUAL ADDITIONS START -->
