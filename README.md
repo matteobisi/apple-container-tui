@@ -1,91 +1,38 @@
 # Apple Container TUI
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Build](https://github.com/matteobisi/apple-container-tui/actions/workflows/build-binary.yml/badge.svg)](https://github.com/matteobisi/apple-container-tui/actions/workflows/build-binary.yml)
+[![Latest Release](https://img.shields.io/github/v/release/matteobisi/apple-container-tui)](https://github.com/matteobisi/apple-container-tui/releases/latest)
+[![Go Version](https://img.shields.io/github/go-mod/go-version/matteobisi/apple-container-tui)](go.mod)
+[![Contributors](https://img.shields.io/github/contributors/matteobisi/apple-container-tui)](https://github.com/matteobisi/apple-container-tui/graphs/contributors)
+[![Project Status: Proof of Concept](https://img.shields.io/badge/status-proof--of--concept-orange)](https://www.msbiro.net)
+
+> Keyboard-first terminal UI for managing [Apple Container](https://github.com/apple/container) on macOS.
+
 ## Overview
 
-Apple Container TUI is a keyboard-first terminal UI for managing [Apple Container](https://github.com/apple/container)
-operations on macOS. It lets you list containers, start/stop/delete them,
-pull images, browse registries, export stopped containers, build from
-Containerfiles, and manage the daemon with safe command previews and
-confirmations.
+Apple Container TUI (`actui`) lets you list, start, stop, delete, and export containers; pull and build images; browse registries; and control the daemon — all from the terminal with safe command previews and confirmation prompts before any destructive action.
 
-**This repository was created as a proof-of-concept to test and document the
-capabilities of spec-kit, a structured software development workflow. The full
-process and insights will be documented on [www.msbiro.net](https://www.msbiro.net).**
-
-### Development Process
-
-This project demonstrates a hybrid AI-assisted development approach:
-
-- **Specification Phase**: All spec-kit artifacts (plan, spec, tasks, data model,
-  contracts) were created using Claude Sonnet 4.5
-- **Implementation Phase**: Code implementation was performed using GPT-5.2-codex
-- **Validation Phase**: Final testing, validation, and project oversight by the
-  author
-
-This workflow showcases how different AI models can be leveraged for their
-strengths across different phases of software development.
-
-### AI Contributor Notes
-
-For AI-oriented navigation and UI ownership guidance, see [AGENTS.md](AGENTS.md) and the detailed map in [docs/ai-menu-map.md](docs/ai-menu-map.md).
+This repository is a proof-of-concept showcasing [spec-kit](https://www.msbiro.net), a structured AI-assisted development workflow. Full process notes are published on [www.msbiro.net](https://www.msbiro.net).
 
 ## Features
 
-- Container list with container action submenus (start/stop/logs/shell)
-- Stopped-container export workflow with destination selection, command preview, and optional cleanup confirmation
+- Container list with action submenus (start / stop / logs / shell / export)
 - Safe delete with type-to-confirm
-- Image management screen (`i`) with list/pull/build/prune and dedicated registries view
-- Image submenu with inspect/delete
-- Build form pull toggle enabled by default
-- Daemon start/stop controls with structured status parsing and unknown fallback
-- Command preview before execution
+- Image management (`i`) — list, pull, build, prune, inspect, delete
+- Dedicated registries view (`g`)
+- Build form with `--pull` toggle (enabled by default)
+- Daemon start/stop with structured status (`running` / `stopped` / `unknown`)
+- Command preview before every execution
 - Dry-run mode for safe practice
 - JSONL command logs with rotation
 
-## Interface
-
-The TUI provides a clean, keyboard-driven interface with tabular layouts for easy scanning:
-
-**Container List View**:
-```
-Containers
-
-Name                                             State      Base Image                                            
-───────────────────────────────────────────────────────────────────────────────────────────────────────────────
-buildkit                                         stopped    ghcr.io/apple/container-builder-shim/builder:0.7.0
-cba13176-5dae-497f-a74b-381671056c3b             stopped    markitdown:latest
-17007fa5-710a-4ac2-98e0-7923cb26153f             stopped    docker.io/library/ubuntu:latest
-808552b9-d78e-4448-a691-927c3848b4b5             stopped    docker.io/library/ubuntu:latest
-───────────────────────────────────────────────────────────────────────────────────────────────────────────────
-
-Keys: up/down, enter=submenu, s=start, t=stop, d=delete(!), i=images, r=refresh, m=manage, ?=help, q=quit
-```
-
-**Image List View**:
-```
-Images
-
-Name                                             Tag        Digest
-───────────────────────────────────────────────────────────────────────────────────────────────────────────────
-docker.io/library/ubuntu                         latest     c2a6e3c0        
-markitdown                                       latest     8f3d91a2
-───────────────────────────────────────────────────────────────────────────────────────────────────────────────
-
-Keys: up/down=navigate, enter=submenu, p=pull, g=registries, b=build, n=image-prune, r=refresh, esc=back
-```
-
-The application launches in full-screen mode (alternate screen buffer), clearing the terminal
-for an immersive experience and restoring your previous terminal content on exit.
-
-All operations show command previews before execution, and destructive actions
-require explicit confirmation for safety.
-
-## Installation
+## Quick Start
 
 ### Prerequisites
 
 - macOS 26.x on Apple Silicon
-- Apple Container CLI installed and in PATH (tested with version 0.9.0)
+- [Apple Container CLI](https://github.com/apple/container) installed and in `PATH`
 - Go 1.21+ if building from source
 
 Verify the CLI is available:
@@ -94,50 +41,50 @@ Verify the CLI is available:
 container system version
 ```
 
-### Build from source
+### Install
 
 ```bash
 go mod download
 go build -o actui ./cmd/actui
 ```
 
-## Quick Start
+Or download the pre-built `actui-darwin-arm64` binary from the [latest release](https://github.com/matteobisi/apple-container-tui/releases/latest).
 
-Launch the TUI:
-
-```bash
-./actui
-```
-
-Dry-run mode (preview only, no execution):
+### Run
 
 ```bash
-./actui --dry-run
+./actui            # normal mode
+./actui --dry-run  # preview only, no commands executed
 ```
 
-Helpful keys:
+## Key Bindings
 
-- `?` for help
-- `i` to open image management
-- `p`/`g`/`b`/`n` for pull/registries/build/prune inside image view
-- `m` to manage the daemon
+| Context | Key | Action |
+|---|---|---|
+| Anywhere | `?` | Help screen |
+| Anywhere | `q` | Quit |
+| Container list | `enter` | Open container submenu |
+| Container list | `s` / `t` | Start / Stop selected container |
+| Container list | `d` | Delete (type-to-confirm) |
+| Container list | `i` | Open image management |
+| Container list | `m` | Daemon management |
+| Container list | `r` | Refresh |
+| Image list | `p` | Pull image |
+| Image list | `b` | Build from Containerfile |
+| Image list | `g` | Browse registries |
+| Image list | `n` | Prune unused images |
+| Image list | `esc` | Back to container list |
 
-Additional workflows:
-
-- Export is available from the submenu of stopped containers only, with an explicit prompt before removing the temporary export image
-- Build previews show whether `--pull` will be applied
-- Daemon status can render `running`, `stopped`, or `unknown`
+For full workflow walkthroughs and ASCII screenshots, see [docs/user-guide.md](docs/user-guide.md).
 
 ## Configuration
 
-Config is read from:
+Config is read from (in order):
 
 - `~/.config/actui/config`
 - `~/Library/Application Support/actui/config`
 
-Writes go to:
-
-- `~/Library/Application Support/actui/config`
+Writes go to `~/Library/Application Support/actui/config`.
 
 Example TOML:
 
@@ -149,9 +96,7 @@ refresh_on_focus = false
 log_retention_days = 7
 ```
 
-Logs are stored at:
-
-- `~/Library/Application Support/actui/command.log`
+Logs: `~/Library/Application Support/actui/command.log`
 
 ## Development
 
@@ -168,41 +113,45 @@ Run tests:
 go test ./...
 ```
 
-## Repository Security Automation
+## Development Process
 
-This repository uses GitHub-native security automation:
+This project demonstrates a hybrid AI-assisted workflow:
 
-- OSSF Scorecard workflow in [.github/workflows/scorecard.yml](.github/workflows/scorecard.yml)
-- Dependabot configuration in [.github/dependabot.yml](.github/dependabot.yml)
-- Repository security policy in [SECURITY.md](SECURITY.md)
+- **Specification**: Artifacts (plan, spec, tasks, data model, contracts) authored with Claude Sonnet
+- **Implementation**: Code written by Codex
+- **Validation**: Final testing and oversight by the author
 
-Enforcement baseline on `main`:
+## Documentation
 
-- Required status check: `OSSF Scorecard`
-- Branch protection enabled (force-push and deletion blocked)
-- Dependabot security updates enabled
+| Document | Description |
+|---|---|
+| [docs/user-guide.md](docs/user-guide.md) | Full workflow walkthroughs, key bindings, troubleshooting |
+| [docs/binary-build-automation.md](docs/binary-build-automation.md) | CI build, SBOM generation, release automation |
+| [docs/security-automation.md](docs/security-automation.md) | OSSF Scorecard, Dependabot, branch protection |
+| [docs/ai-menu-map.md](docs/ai-menu-map.md) | AI agent navigation map and UI ownership guide |
+| [docs/speckit-security-hardening-retrospective.md](docs/speckit-security-hardening-retrospective.md) | Retrospective on the security hardening sprint |
 
-Operational guidance, branch-protection mapping, provenance verification, and troubleshooting are documented in [docs/security-automation.md](docs/security-automation.md).
+## Security
 
-## Binary Build and Release Automation
+Repository security is enforced via OSSF Scorecard, Dependabot, and branch protection on `main`. Releases include SBOM (SPDX 2.3 JSON) and GitHub provenance attestations. See [docs/security-automation.md](docs/security-automation.md) and [SECURITY.md](SECURITY.md) for details.
 
-Build workflow operations, SBOM generation, retention policy, and troubleshooting are documented in [docs/binary-build-automation.md](docs/binary-build-automation.md).
+## Releases & Binaries
 
-Release publication is automated: a successful build on `main` automatically triggers the `Publish Release` workflow, which applies a deterministic semantic version tag (`v0.1.0`, `v0.1.1`, …) and publishes a GitHub Release with the `actui-darwin-arm64` macOS Apple Silicon binary and an `actui-darwin-arm64.spdx.json` SBOM (SPDX 2.3 JSON) attached. The same workflow also generates GitHub provenance attestations for both release assets, which can be verified with `gh attestation verify`. The full trigger chain, version-labeling policy, SBOM generation details, provenance verification flow, duplicate handling, and operator validation checklist are all in [docs/binary-build-automation.md](docs/binary-build-automation.md).
+Merging to `main` automatically triggers a build and publishes a versioned GitHub Release with the `actui-darwin-arm64` binary and its SBOM. See [docs/binary-build-automation.md](docs/binary-build-automation.md) for the full release pipeline.
 
-## Contribution Workflow
+## Contributing
 
-All changes (human or AI-authored) should follow the same repository workflow:
+All changes (human or AI-authored) follow the same workflow:
 
-1. Create a new branch from `main`
+1. Create a branch from `main`
 2. Commit focused changes with clear messages
 3. Open a pull request to `main`
 4. Wait for required checks to pass before merge
 
-Direct pushes to `main` are not part of the normal workflow.
+For AI agent guidelines, see [AGENTS.md](AGENTS.md) and [docs/ai-menu-map.md](docs/ai-menu-map.md).
+
+Direct pushes to `main` are blocked.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
-for details. You are free to use, modify, and distribute this software with
-proper attribution to the original author.
+MIT — see [LICENSE](LICENSE) for details.
