@@ -33,7 +33,7 @@ jobs:
       # and writes an SPDX 2.3 JSON document. upload-artifact is disabled here so the
       # artifact name and retention policy are controlled explicitly in the next step.
       - name: Generate SBOM
-        uses: anchore/sbom-action@fd74a6fb98a204a1ad35bbfae0122c1a302ff88b # v0.15.0, composite action
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.15.0, composite action
         with:
           format: spdx-json
           output-file: actui-darwin-arm64.spdx.json
