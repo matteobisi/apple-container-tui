@@ -43,7 +43,7 @@ jobs:
       # T007: Download actui-darwin-arm64 from the triggering workflow run.
       # run-id targets the specific build run; github-token is required for cross-run access.
       - name: Download artifact actui-darwin-arm64
-        uses: actions/download-artifact@cc203385981b70ca67e1cc392babf9cc229d5806 # v4.1.9, Node 24 compatible; cross-run download via run-id
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v4.1.9, Node 24 compatible; cross-run download via run-id
         with:
           name: actui-darwin-arm64
           path: release-assets/
@@ -54,7 +54,7 @@ jobs:
       # It is stored as a separate named artifact ('actui-darwin-arm64-sbom') so that it
       # can be independently traced and downloaded without extracting the binary artifact.
       - name: Download SBOM artifact actui-darwin-arm64-sbom
-        uses: actions/download-artifact@cc203385981b70ca67e1cc392babf9cc229d5806 # v4.1.9, Node 24 compatible; cross-run download via run-id
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v4.1.9, Node 24 compatible; cross-run download via run-id
         with:
           name: actui-darwin-arm64-sbom
           path: release-assets/
