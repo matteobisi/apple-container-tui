@@ -26,6 +26,12 @@ ContainerList
 |  |- ImagePull
 |  |- Registries
 |  `- FilePicker -> Build
+|- MachineList
+|  |- MachineSubmenu
+|  |  |- MachineInspect
+|  |  |- MachineLogs
+|  |  `- MachineEditResources
+|  `- MachineCreate
 |- DaemonControl
 `- Help
 ```
@@ -52,7 +58,13 @@ ContainerList
 | ImageSubmenu | Contextual actions for selected image | `enter` on image row | [src/ui/image_submenu.go](src/ui/image_submenu.go) | image inspect and delete services under [src/services](src/services) |
 | ImageInspect | Render detailed image metadata | `inspect` action from image submenu | [src/ui/image_inspect.go](src/ui/image_inspect.go) | [src/services/image_inspect_builder.go](src/services/image_inspect_builder.go) |
 | ImagePull | Pull image workflow with preview | `p` from image list | [src/ui/image_pull.go](src/ui/image_pull.go) | [src/services/pull_image_builder.go](src/services/pull_image_builder.go) |
-| Registries | View runtime-managed registry logins | `g` from image list | [src/ui/registries.go](src/ui/registries.go) | [src/services/registry_list_builder.go](src/services/registry_list_builder.go), [src/services/registry_parser.go](src/services/registry_parser.go) |
+| Registries | View runtime-managed registry logins from Apple Container 1.0 JSON | `g` from image list | [src/ui/registries.go](src/ui/registries.go) | [src/services/registry_list_builder.go](src/services/registry_list_builder.go), [src/services/registry_parser.go](src/services/registry_parser.go) |
+| MachineList | Root container machine browser | `M` from container list | [src/ui/machine_list.go](src/ui/machine_list.go) | [src/services/machine_list_builder.go](src/services/machine_list_builder.go), [src/services/machine_parser.go](src/services/machine_parser.go) |
+| MachineSubmenu | Contextual actions for selected machine | `enter` on machine row | [src/ui/machine_submenu.go](src/ui/machine_submenu.go) | start, stop, delete, set-default related services under [src/services](src/services) |
+| MachineInspect | Render detailed machine metadata | `inspect` action from machine submenu | [src/ui/machine_inspect.go](src/ui/machine_inspect.go) | [src/services/machine_inspect_builder.go](src/services/machine_inspect_builder.go) |
+| MachineLogs | Show logs for selected machine | `logs` action from machine submenu | [src/ui/machine_logs.go](src/ui/machine_logs.go) | [src/services/machine_logs_builder.go](src/services/machine_logs_builder.go) |
+| MachineEditResources | Edit CPUs, memory, and home mount | `edit resources` action from machine submenu | [src/ui/machine_edit_resources.go](src/ui/machine_edit_resources.go) | [src/services/machine_set_builder.go](src/services/machine_set_builder.go) |
+| MachineCreate | Create a container machine from an image | `c` from machine list | [src/ui/machine_create.go](src/ui/machine_create.go) | [src/services/machine_create_builder.go](src/services/machine_create_builder.go) |
 | FilePicker | Select build source file | `b` from image list | [src/ui/file_picker.go](src/ui/file_picker.go) | build source detection services under [src/services](src/services) |
 | Build | Build image from selected file | file chosen in file picker | [src/ui/build.go](src/ui/build.go) | [src/services/build_image_builder.go](src/services/build_image_builder.go), [src/services/build_file_detector.go](src/services/build_file_detector.go) |
 | DaemonControl | Daemon status and start/stop actions | `m` from container list | [src/ui/daemon_control.go](src/ui/daemon_control.go) | [src/services/check_daemon_builder.go](src/services/check_daemon_builder.go), [src/services/daemon_parser.go](src/services/daemon_parser.go), [src/services/start_daemon_builder.go](src/services/start_daemon_builder.go), [src/services/stop_daemon_builder.go](src/services/stop_daemon_builder.go) |
@@ -69,6 +81,7 @@ ContainerList
   - `t` previews stop
   - `d` opens delete confirmation
   - `i` opens [src/ui/image_list.go](src/ui/image_list.go)
+  - `M` opens [src/ui/machine_list.go](src/ui/machine_list.go)
   - `m` opens [src/ui/daemon_control.go](src/ui/daemon_control.go)
   - `?` opens [src/ui/help.go](src/ui/help.go)
 
@@ -90,6 +103,18 @@ ContainerList
   - `b` opens [src/ui/file_picker.go](src/ui/file_picker.go)
   - `n` opens prune confirmation
 - If a new image-level workflow is added, this is the default insertion point
+
+### Machine Branch
+
+- File: [src/ui/machine_list.go](src/ui/machine_list.go)
+- Primary actions:
+  - `enter` opens [src/ui/machine_submenu.go](src/ui/machine_submenu.go)
+  - `c` opens [src/ui/machine_create.go](src/ui/machine_create.go)
+  - `r` refreshes the machine list
+- Submenu actions are owned by [src/ui/machine_submenu.go](src/ui/machine_submenu.go): inspect, logs, start/stop, edit resources, set default, delete
+- Resource edits route through [src/ui/machine_edit_resources.go](src/ui/machine_edit_resources.go) and [src/services/machine_set_builder.go](src/services/machine_set_builder.go)
+- Machine list parsing is owned by [src/services/machine_parser.go](src/services/machine_parser.go); it must accept Apple Container 1.0 `status` and numeric byte `memory` fields as well as older `state`/string-memory fixtures
+- Registry parsing is owned by [src/services/registry_parser.go](src/services/registry_parser.go); it must preserve Apple Container 1.0 `name`, `username`, `creationDate`, and `modificationDate` fields
 
 ### Build Branch
 

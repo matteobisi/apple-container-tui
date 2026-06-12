@@ -134,6 +134,52 @@ func TestBuilders(t *testing.T) {
 	if err != nil || registryCmd.Args[0] != "registry" || registryCmd.Args[3] != "json" {
 		t.Fatalf("unexpected registry list command: %v %v", registryCmd, err)
 	}
+
+	machineListCmd, err := MachineListBuilder{}.Build()
+	if err != nil || strings.Join(machineListCmd.Args, " ") != "machine list --format json" {
+		t.Fatalf("unexpected machine list command: %v %v", machineListCmd, err)
+	}
+	machineStartCmd, err := MachineStartBuilder{MachineID: "dev"}.Build()
+	if err != nil || strings.Join(machineStartCmd.Args, " ") != "machine run -n dev" {
+		t.Fatalf("unexpected machine start command: %v %v", machineStartCmd, err)
+	}
+	machineStopCmd, err := MachineStopBuilder{MachineID: "dev"}.Build()
+	if err != nil || strings.Join(machineStopCmd.Args, " ") != "machine stop dev" {
+		t.Fatalf("unexpected machine stop command: %v %v", machineStopCmd, err)
+	}
+	machineDeleteCmd, err := MachineDeleteBuilder{MachineID: "dev"}.Build()
+	if err != nil || strings.Join(machineDeleteCmd.Args, " ") != "machine delete dev" {
+		t.Fatalf("unexpected machine delete command: %v %v", machineDeleteCmd, err)
+	}
+	machineDefaultCmd, err := MachineSetDefaultBuilder{MachineID: "dev"}.Build()
+	if err != nil || strings.Join(machineDefaultCmd.Args, " ") != "machine set-default dev" {
+		t.Fatalf("unexpected machine set-default command: %v %v", machineDefaultCmd, err)
+	}
+	machineInspectCmd, err := MachineInspectBuilder{MachineID: "dev"}.Build()
+	if err != nil || strings.Join(machineInspectCmd.Args, " ") != "machine inspect dev" {
+		t.Fatalf("unexpected machine inspect command: %v %v", machineInspectCmd, err)
+	}
+	machineLogsCmd, err := MachineLogsBuilder{MachineID: "dev"}.Build()
+	if err != nil || strings.Join(machineLogsCmd.Args, " ") != "machine logs dev" {
+		t.Fatalf("unexpected machine logs command: %v %v", machineLogsCmd, err)
+	}
+	machineSetCmd, err := MachineSetBuilder{MachineID: "dev", CPUs: "4", Memory: "8G", HomeMount: "rw"}.Build()
+	if err != nil || strings.Join(machineSetCmd.Args, " ") != "machine set -n dev cpus=4 memory=8G home-mount=rw" {
+		t.Fatalf("unexpected machine set command: %v %v", machineSetCmd, err)
+	}
+	machineCreateCmd, err := MachineCreateBuilder{Image: "alpine:latest", Name: "dev"}.Build()
+	if err != nil || strings.Join(machineCreateCmd.Args, " ") != "machine create alpine:latest --name dev" {
+		t.Fatalf("unexpected machine create command: %v %v", machineCreateCmd, err)
+	}
+	if _, err := (MachineCreateBuilder{Image: ""}).Build(); err == nil {
+		t.Fatalf("expected error for missing image")
+	}
+	if _, err := (MachineSetBuilder{MachineID: "dev", CPUs: "0", Memory: "8G", HomeMount: "rw"}).Build(); err == nil {
+		t.Fatalf("expected error for invalid cpus")
+	}
+	if _, err := (MachineDeleteBuilder{MachineID: ""}).Build(); err == nil {
+		t.Fatalf("expected error for missing machine id")
+	}
 }
 
 func TestBuildImageBuilderTrims(t *testing.T) {
@@ -248,12 +294,39 @@ func TestParseDaemonStatus(t *testing.T) {
 }
 
 func TestParseRegistryList(t *testing.T) {
-	entries, err := ParseRegistryList(`[{"hostname":"registry.example.com","username":"user"},{"hostname":""}]`)
+	entries, err := ParseRegistryList(`[{"creationDate":"2025-11-04T01:17:34Z","id":"registry.example.com","labels":{},"modificationDate":"2025-11-04T01:17:34Z","name":"registry.example.com","username":"user"},{"creationDate":"2025-11-04T01:17:34Z","id":"","labels":{},"modificationDate":"2025-11-04T01:17:34Z","name":"","username":"ignored"}]`)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if len(entries) != 1 || entries[0].Hostname != "registry.example.com" {
 		t.Fatalf("unexpected registry entries: %#v", entries)
+	}
+	if entries[0].CreatedDate.IsZero() || entries[0].ModifiedDate.IsZero() {
+		t.Fatalf("expected registry dates to parse: %#v", entries[0])
+	}
+}
+
+func TestParseMachineList(t *testing.T) {
+	machines, err := ParseMachineList(`[{"id":"dev","image":"alpine:latest","state":"running","default":true,"cpus":4,"memory":"8G","homeMount":"rw"},{"id":"ubuntu-systemd","diskSize":250363904,"status":"stopped","default":false,"createdDate":"2026-06-11T14:32:19Z","cpus":2,"memory":4294967296},{"id":"","state":"running"},{"id":"unknown","state":"paused","homeMount":"bad"}]`)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(machines) != 3 {
+		t.Fatalf("expected two valid machines, got %#v", machines)
+	}
+	if machines[0].ID != "dev" || machines[0].State != models.MachineStateRunning || !machines[0].IsDefault || machines[0].HomeMount != "rw" {
+		t.Fatalf("unexpected first machine: %#v", machines[0])
+	}
+	if machines[1].ID != "ubuntu-systemd" || machines[1].State != models.MachineStateStopped || machines[1].Memory != "4G" {
+		t.Fatalf("expected live machine output normalization: %#v", machines[1])
+	}
+	if machines[2].State != models.MachineStateUnknown || machines[2].HomeMount != "rw" {
+		t.Fatalf("expected normalized fallback values: %#v", machines[2])
+	}
+
+	empty, err := ParseMachineList("")
+	if err != nil || len(empty) != 0 {
+		t.Fatalf("expected empty machine list, got %#v err=%v", empty, err)
 	}
 }
 

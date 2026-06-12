@@ -3,21 +3,27 @@
 ## Overview
 
 Apple Container TUI is a keyboard-first terminal UI for listing containers,
-starting or stopping them, exporting stopped containers, pulling images,
-building from Containerfiles, browsing runtime registries, and managing the
+starting or stopping them, exporting stopped containers, managing Apple Container 1.0
+machines, pulling images, building from Containerfiles, browsing runtime registries, and managing the
 Apple Container daemon. Every action shows a command preview before execution,
 with optional dry-run mode for safe practice.
 
 ## Prerequisites
 
 - macOS 26.x on Apple Silicon
-- Apple Container CLI installed and in PATH
-- Go 1.21+ if building from source
+- Apple Container CLI 1.0+ installed and in PATH
+- Go 1.24+ if building from source
 
 Verify the CLI is available:
 
 ```bash
 container system version
+```
+
+Machine workflows require the Apple Container service to be running:
+
+```bash
+container system start
 ```
 
 ## Installation
@@ -120,6 +126,34 @@ ASCII screenshot:
 2. Press `g` to open the Registries screen
 3. Review runtime-managed registry entries by hostname and username
 4. Press `r` to refresh or `esc` to return to the image list
+
+The Registries screen reads Apple Container 1.0 JSON output, including `name`, `username`, `creationDate`, and `modificationDate` fields.
+
+## Workflow: Manage Container Machines
+
+1. Press `M` from the main container list to open container machines
+2. Use arrow keys to select a machine
+3. Press `enter` to open the machine submenu
+4. Press `c` from the machine list to create a new machine from an image reference
+5. Choose `Inspect machine`, `View machine logs`, `Start machine`, `Stop machine`, `Edit resources`, `Set as default`, or `Delete machine`
+6. Review command previews before create, start, stop, set-default, and resource edits; type the machine name to confirm delete
+
+ASCII screenshot:
+
+```
++------------------------------------------------------+
+| Container Machines                                   |
+|                                                      |
+| > dev        running   alpine:latest        yes      |
+|   ubuntu     stopped   local/ubuntu:latest           |
+|                                                      |
+| Keys: up/down, enter=submenu, c=create, r=refresh, esc=containers |
++------------------------------------------------------+
+```
+
+Resource edits update CPUs, memory, and home mount (`rw`, `ro`, or `none`). Changes take effect after the next stop and restart.
+
+Machine listing reads `container machine list --format json` and supports Apple Container 1.0's `status` field and numeric byte memory values.
 
 ## Workflow: Export a Stopped Container
 

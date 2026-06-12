@@ -21,6 +21,7 @@ type AppModel struct {
 
 	selectedContainer *models.Container
 	selectedImage     *models.Image
+	selectedMachine   *models.ContainerMachine
 	navDebugEnabled   bool
 
 	containerList   ContainerListScreen
@@ -32,6 +33,12 @@ type AppModel struct {
 	imageInspect    ImageInspectScreen
 	imagePull       ImagePullScreen
 	registries      RegistriesScreen
+	machineList     MachineListScreen
+	machineSub      MachineSubmenuScreen
+	machineInspect  MachineInspectScreen
+	machineLogs     MachineLogsScreen
+	machineEditRes  MachineEditResourcesScreen
+	machineCreate   MachineCreateScreen
 	filePicker      FilePickerScreen
 	buildScreen     BuildScreen
 	containerExport ContainerExportScreen
@@ -56,6 +63,12 @@ func NewAppModel(executor services.CommandExecutor, version string) AppModel {
 		imageInspect:    NewImageInspectScreen(executor),
 		imagePull:       NewImagePullScreen(executor),
 		registries:      NewRegistriesScreen(executor),
+		machineList:     NewMachineListScreen(executor),
+		machineSub:      NewMachineSubmenuScreen(executor),
+		machineInspect:  NewMachineInspectScreen(executor),
+		machineLogs:     NewMachineLogsScreen(executor),
+		machineEditRes:  NewMachineEditResourcesScreen(executor),
+		machineCreate:   NewMachineCreateScreen(executor),
 		filePicker:      NewFilePickerScreen(executor),
 		buildScreen:     NewBuildScreen(executor, ""),
 		containerExport: NewContainerExportScreen(executor),
@@ -88,13 +101,19 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.imageInspect, _ = m.imageInspect.Update(message)
 		m.imagePull, _ = m.imagePull.Update(message)
 		m.registries, _ = m.registries.Update(message)
+		m.machineList, _ = m.machineList.Update(message)
+		m.machineSub, _ = m.machineSub.Update(message)
+		m.machineInspect, _ = m.machineInspect.Update(message)
+		m.machineLogs, _ = m.machineLogs.Update(message)
+		m.machineEditRes, _ = m.machineEditRes.Update(message)
+		m.machineCreate, _ = m.machineCreate.Update(message)
 		m.filePicker, _ = m.filePicker.Update(message)
 		m.buildScreen, _ = m.buildScreen.Update(message)
 		m.containerExport, _ = m.containerExport.Update(message)
 		m.daemonControl, _ = m.daemonControl.Update(message)
 		m.help, _ = m.help.Update(message)
 	case tea.KeyMsg:
-		if keyMatches(message, m.keys.Quit) {
+		if keyMatches(message, m.keys.Quit) && !m.machineScreenUsesQForBack() {
 			return m, tea.Quit
 		}
 	case screenChangeMsg:
@@ -115,6 +134,14 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.selectedImage = &imageCopy
 			m.imageSub = m.imageSub.SetImage(imageCopy)
 			m.imageInspect = m.imageInspect.SetImage(imageCopy)
+		}
+		if message.machine != nil {
+			machineCopy := *message.machine
+			m.selectedMachine = &machineCopy
+			m.machineSub = m.machineSub.SetMachine(machineCopy)
+			m.machineInspect = m.machineInspect.SetMachine(machineCopy)
+			m.machineLogs = m.machineLogs.SetMachine(machineCopy)
+			m.machineEditRes = m.machineEditRes.SetMachine(machineCopy)
 		}
 		if message.target == ScreenImagePull {
 			if origin == ScreenImageList {
@@ -152,6 +179,19 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			cmd = m.imagePull.Init()
 		case ScreenRegistries:
 			cmd = m.registries.Init()
+		case ScreenMachineList:
+			cmd = m.machineList.Init()
+		case ScreenMachineSubmenu:
+			cmd = m.machineSub.Init()
+		case ScreenMachineInspect:
+			cmd = m.machineInspect.Init()
+		case ScreenMachineLogs:
+			cmd = m.machineLogs.Init()
+		case ScreenMachineEditResources:
+			cmd = m.machineEditRes.Init()
+		case ScreenMachineCreate:
+			m.machineCreate = m.machineCreate.Reset()
+			cmd = m.machineCreate.Init()
 		case ScreenFilePicker:
 			cmd = m.filePicker.Init()
 		case ScreenBuild:
@@ -189,6 +229,10 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.active = ScreenContainerSubmenu
 			m.containerSub = m.containerSub.SetContainer(*m.selectedContainer)
 			cmd = m.containerSub.Init()
+		} else if m.selectedMachine != nil {
+			m.active = ScreenMachineSubmenu
+			m.machineSub = m.machineSub.SetMachine(*m.selectedMachine)
+			cmd = m.machineSub.Init()
 		}
 		m.logNavigation("back-to-submenu", origin, m.active)
 		skipScreenUpdate = true
@@ -203,6 +247,30 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case ScreenRegistries:
 			updated, updateCmd := m.registries.Update(msg)
 			m.registries = updated
+			cmd = tea.Batch(cmd, updateCmd)
+		case ScreenMachineList:
+			updated, updateCmd := m.machineList.Update(msg)
+			m.machineList = updated
+			cmd = tea.Batch(cmd, updateCmd)
+		case ScreenMachineSubmenu:
+			updated, updateCmd := m.machineSub.Update(msg)
+			m.machineSub = updated
+			cmd = tea.Batch(cmd, updateCmd)
+		case ScreenMachineInspect:
+			updated, updateCmd := m.machineInspect.Update(msg)
+			m.machineInspect = updated
+			cmd = tea.Batch(cmd, updateCmd)
+		case ScreenMachineLogs:
+			updated, updateCmd := m.machineLogs.Update(msg)
+			m.machineLogs = updated
+			cmd = tea.Batch(cmd, updateCmd)
+		case ScreenMachineEditResources:
+			updated, updateCmd := m.machineEditRes.Update(msg)
+			m.machineEditRes = updated
+			cmd = tea.Batch(cmd, updateCmd)
+		case ScreenMachineCreate:
+			updated, updateCmd := m.machineCreate.Update(msg)
+			m.machineCreate = updated
 			cmd = tea.Batch(cmd, updateCmd)
 		case ScreenContainerSubmenu:
 			updated, updateCmd := m.containerSub.Update(msg)
@@ -285,6 +353,18 @@ func (m AppModel) View() string {
 		return m.imagePull.View() + "\n" + status
 	case ScreenRegistries:
 		return m.registries.View() + "\n" + status
+	case ScreenMachineList:
+		return m.machineList.View() + "\n" + status
+	case ScreenMachineSubmenu:
+		return m.machineSub.View() + "\n" + status
+	case ScreenMachineInspect:
+		return m.machineInspect.View() + "\n" + status
+	case ScreenMachineLogs:
+		return m.machineLogs.View() + "\n" + status
+	case ScreenMachineEditResources:
+		return m.machineEditRes.View() + "\n" + status
+	case ScreenMachineCreate:
+		return m.machineCreate.View() + "\n" + status
 	case ScreenFilePicker:
 		return m.filePicker.View() + "\n" + status
 	case ScreenBuild:
@@ -328,6 +408,29 @@ func (m AppModel) statusBarInfo() (string, string) {
 		}
 	case ScreenRegistries:
 		label = "Registries"
+	case ScreenMachineList:
+		label = "Machines"
+	case ScreenMachineSubmenu:
+		label = "Machine Actions"
+		if m.machineSub.preview != nil {
+			preview = m.machineSub.preview.Command.String()
+		} else if m.machineSub.confirm != nil {
+			preview = m.machineSub.confirm.Command.String()
+		}
+	case ScreenMachineInspect:
+		label = "Machine Inspect"
+	case ScreenMachineLogs:
+		label = "Machine Logs"
+	case ScreenMachineEditResources:
+		label = "Machine Resources"
+		if m.machineEditRes.preview != nil {
+			preview = m.machineEditRes.preview.Command.String()
+		}
+	case ScreenMachineCreate:
+		label = "Create Machine"
+		if m.machineCreate.preview != nil {
+			preview = m.machineCreate.preview.Command.String()
+		}
 	case ScreenFilePicker:
 		label = "File Picker"
 	case ScreenBuild:
@@ -382,6 +485,18 @@ func (m AppModel) isLoading() bool {
 		return m.imageList.loading
 	case ScreenRegistries:
 		return m.registries.loading
+	case ScreenMachineList:
+		return m.machineList.loading
+	case ScreenMachineSubmenu:
+		return m.machineSub.loading
+	case ScreenMachineInspect:
+		return m.machineInspect.loading
+	case ScreenMachineLogs:
+		return m.machineLogs.loading
+	case ScreenMachineEditResources:
+		return m.machineEditRes.loading
+	case ScreenMachineCreate:
+		return m.machineCreate.loading
 	case ScreenImagePull:
 		return m.imagePull.loading
 	case ScreenBuild:
@@ -436,6 +551,18 @@ func (m AppModel) initForActive() tea.Cmd {
 		return m.imagePull.Init()
 	case ScreenRegistries:
 		return m.registries.Init()
+	case ScreenMachineList:
+		return m.machineList.Init()
+	case ScreenMachineSubmenu:
+		return m.machineSub.Init()
+	case ScreenMachineInspect:
+		return m.machineInspect.Init()
+	case ScreenMachineLogs:
+		return m.machineLogs.Init()
+	case ScreenMachineEditResources:
+		return m.machineEditRes.Init()
+	case ScreenMachineCreate:
+		return m.machineCreate.Init()
 	case ScreenFilePicker:
 		return m.filePicker.Init()
 	case ScreenBuild:
@@ -458,4 +585,13 @@ func keyMatches(msg tea.KeyMsg, binding key.Binding) bool {
 		}
 	}
 	return false
+}
+
+func (m AppModel) machineScreenUsesQForBack() bool {
+	switch m.active {
+	case ScreenMachineInspect, ScreenMachineLogs, ScreenMachineEditResources:
+		return true
+	default:
+		return false
+	}
 }

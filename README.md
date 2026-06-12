@@ -11,13 +11,14 @@
 
 ## Overview
 
-Apple Container TUI (`actui`) lets you list, start, stop, delete, and export containers; pull and build images; browse registries; and control the daemon — all from the terminal with safe command previews and confirmation prompts before any destructive action.
+Apple Container TUI (`actui`) lets you list, start, stop, delete, and export containers; manage Apple Container 1.0 machines; pull and build images; browse registries; and control the daemon — all from the terminal with safe command previews and confirmation prompts before any destructive action.
 
 This repository is a proof-of-concept showcasing [spec-kit](https://www.msbiro.net), a structured AI-assisted development workflow. Full process notes are published on [www.msbiro.net](https://www.msbiro.net).
 
 ## Features
 
 - Container list with action submenus (start / stop / logs / shell / export)
+- Apple Container 1.0 machine management (`M`) — list, create, inspect, logs, start/stop, edit resources, set default, delete
 - Safe delete with type-to-confirm
 - Image management (`i`) — list, pull, build, prune, inspect, delete
 - Dedicated registries view (`g`)
@@ -32,13 +33,19 @@ This repository is a proof-of-concept showcasing [spec-kit](https://www.msbiro.n
 ### Prerequisites
 
 - macOS 26.x on Apple Silicon
-- [Apple Container CLI](https://github.com/apple/container) installed and in `PATH`
-- Go 1.21+ if building from source
+- [Apple Container CLI](https://github.com/apple/container) 1.0+ installed and in `PATH`
+- Go 1.24+ if building from source
 
 Verify the CLI is available:
 
 ```bash
 container system version
+```
+
+Machine workflows require the Apple Container service to be running:
+
+```bash
+container system start
 ```
 
 ### Install
@@ -67,8 +74,13 @@ Or download the pre-built `actui-darwin-arm64` binary from the [latest release](
 | Container list | `s` / `t` | Start / Stop selected container |
 | Container list | `d` | Delete (type-to-confirm) |
 | Container list | `i` | Open image management |
+| Container list | `M` | Open container machine management |
 | Container list | `m` | Daemon management |
 | Container list | `r` | Refresh |
+| Machine list | `enter` | Open machine submenu |
+| Machine list | `c` | Create machine |
+| Machine list | `r` | Refresh |
+| Machine list | `esc` | Back to container list |
 | Image list | `p` | Pull image |
 | Image list | `b` | Build from Containerfile |
 | Image list | `g` | Browse registries |
