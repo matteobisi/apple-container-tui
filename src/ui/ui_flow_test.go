@@ -18,8 +18,11 @@ func (f flowExecutor) Execute(cmd models.Command) (models.Result, error) {
 	if len(cmd.Args) > 0 && cmd.Args[0] == "list" {
 		return models.Result{Stdout: f.listOutput, Status: models.ResultSuccess}, nil
 	}
+	if len(cmd.Args) > 1 && cmd.Args[0] == "machine" && cmd.Args[1] == "list" {
+		return models.Result{Stdout: `[{"id":"dev","image":"alpine:latest","state":"running","default":true,"cpus":4,"memory":"8G","homeMount":"rw"}]`, Status: models.ResultSuccess}, nil
+	}
 	if len(cmd.Args) > 0 && cmd.Args[0] == "registry" {
-		return models.Result{Stdout: `[{"hostname":"registry.example.com","username":"user"}]`, Status: models.ResultSuccess}, nil
+		return models.Result{Stdout: `[{"creationDate":"2025-11-04T01:17:34Z","id":"registry.example.com","labels":{},"modificationDate":"2025-11-04T01:17:34Z","name":"registry.example.com","username":"user"}]`, Status: models.ResultSuccess}, nil
 	}
 	if len(cmd.Args) > 1 && cmd.Args[0] == "system" && cmd.Args[1] == "status" {
 		return models.Result{Stdout: `{"status":"running"}`, Status: models.ResultSuccess}, nil
@@ -151,6 +154,92 @@ func TestRegistriesScreenFlow(t *testing.T) {
 	_, cmd := updated.Update(tea.KeyMsg{Type: tea.KeyEscape})
 	if cmd == nil {
 		t.Fatalf("expected back cmd")
+	}
+}
+
+func TestMachineListAndSubmenuFlow(t *testing.T) {
+	machine := models.ContainerMachine{ID: "dev", Image: "alpine:latest", State: models.MachineStateRunning, IsDefault: true, CPUs: 4, Memory: "8G", HomeMount: "rw"}
+	screen := NewMachineListScreen(flowExecutor{})
+	updated, _ := screen.Update(machineListLoadedMsg{machines: []models.ContainerMachine{machine}})
+	if len(updated.machines) != 1 || !updated.hasLoaded {
+		t.Fatalf("expected one loaded machine")
+	}
+	_, cmd := updated.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	if cmd == nil {
+		t.Fatalf("expected submenu navigation cmd")
+	}
+	msg := cmd()
+	change, ok := msg.(screenChangeMsg)
+	if !ok || change.target != ScreenMachineSubmenu || change.machine == nil || change.machine.ID != "dev" {
+		t.Fatalf("unexpected navigation message: %#v", msg)
+	}
+
+	submenu := NewMachineSubmenuScreen(flowExecutor{}).SetMachine(machine)
+	view := submenu.View()
+	if !strings.Contains(view, "Stop machine") || strings.Contains(view, "Start machine") {
+		t.Fatalf("unexpected running machine options: %s", view)
+	}
+	submenu.cursor = 2
+	updatedSubmenu, _ := submenu.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	if updatedSubmenu.preview == nil || !strings.Contains(updatedSubmenu.preview.Command.String(), "machine stop dev") {
+		t.Fatalf("expected stop preview")
+	}
+
+	stopped := machine
+	stopped.State = models.MachineStateStopped
+	stoppedSubmenu := NewMachineSubmenuScreen(flowExecutor{}).SetMachine(stopped)
+	if !strings.Contains(stoppedSubmenu.View(), "Start machine") {
+		t.Fatalf("expected start action for stopped machine")
+	}
+	_, cmd = updated.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'c'}})
+	if cmd == nil {
+		t.Fatalf("expected create navigation cmd")
+	}
+	if change, ok := cmd().(screenChangeMsg); !ok || change.target != ScreenMachineCreate {
+		t.Fatalf("unexpected create navigation message")
+	}
+}
+
+func TestMachineDetailAndEditBackFlows(t *testing.T) {
+	machine := models.ContainerMachine{ID: "dev", Image: "alpine:latest", State: models.MachineStateRunning, CPUs: 4, Memory: "8G", HomeMount: "rw"}
+
+	inspect := NewMachineInspectScreen(flowExecutor{}).SetMachine(machine)
+	_, cmd := inspect.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'q'}})
+	if cmd == nil {
+		t.Fatalf("expected inspect back cmd")
+	}
+	if change, ok := cmd().(screenChangeMsg); !ok || change.target != ScreenMachineSubmenu {
+		t.Fatalf("unexpected inspect back message")
+	}
+
+	logs := NewMachineLogsScreen(flowExecutor{}).SetMachine(machine)
+	_, cmd = logs.Update(tea.KeyMsg{Type: tea.KeyEscape})
+	if cmd == nil {
+		t.Fatalf("expected logs back cmd")
+	}
+
+	edit := NewMachineEditResourcesScreen(flowExecutor{}).SetMachine(machine)
+	updated, _ := edit.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	if updated.preview == nil || !strings.Contains(updated.preview.Command.String(), "machine set -n dev cpus=4 memory=8G home-mount=rw") {
+		t.Fatalf("expected resource edit preview")
+	}
+}
+
+func TestMachineCreateFlow(t *testing.T) {
+	screen := NewMachineCreateScreen(flowExecutor{})
+	screen.inputs[0].SetValue("alpine:latest")
+	screen.inputs[1].SetValue("dev")
+	updated, _ := screen.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	if updated.preview == nil || !strings.Contains(updated.preview.Command.String(), "machine create alpine:latest --name dev") {
+		t.Fatalf("expected create preview")
+	}
+	updated, cmd := updated.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'y'}})
+	if cmd == nil || updated.loading != true {
+		t.Fatalf("expected create execution")
+	}
+	updated, cmd = updated.Update(machineCreateResultMsg{result: models.Result{Status: models.ResultSuccess}})
+	if cmd == nil || updated.result == nil {
+		t.Fatalf("expected create result and return command")
 	}
 }
 

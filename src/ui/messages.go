@@ -24,6 +24,18 @@ const (
 	ScreenImagePull ActiveScreen = "image-pull"
 	// ScreenRegistries shows runtime-managed registry entries.
 	ScreenRegistries ActiveScreen = "registries"
+	// ScreenMachineList shows container machines.
+	ScreenMachineList ActiveScreen = "machine-list"
+	// ScreenMachineSubmenu shows actions for selected container machine.
+	ScreenMachineSubmenu ActiveScreen = "machine-submenu"
+	// ScreenMachineInspect shows container machine inspect output.
+	ScreenMachineInspect ActiveScreen = "machine-inspect"
+	// ScreenMachineLogs shows container machine logs.
+	ScreenMachineLogs ActiveScreen = "machine-logs"
+	// ScreenMachineEditResources edits container machine resources.
+	ScreenMachineEditResources ActiveScreen = "machine-edit-resources"
+	// ScreenMachineCreate creates a container machine.
+	ScreenMachineCreate ActiveScreen = "machine-create"
 	// ScreenFilePicker shows the build file picker.
 	ScreenFilePicker ActiveScreen = "file-picker"
 	// ScreenBuild shows the build workflow.
@@ -40,6 +52,7 @@ type screenChangeMsg struct {
 	target    ActiveScreen
 	container *models.Container
 	image     *models.Image
+	machine   *models.ContainerMachine
 	push      bool
 }
 
