@@ -13,6 +13,9 @@ Sync Impact Report
 - Amendment rationale: Incorporated workflows delivered in
   `005-expand-container-workflows` and clarified contract artifact policy
   (spec table or contract document) so governance matches current practice.
+- Amendment rationale: Permitted the bounded local Kubernetes cluster workflow
+  specified in `014-kubernetes-workflow` while retaining remote clusters and
+  workload orchestration as out of scope.
 -->
 # Container TUI Constitution
 
@@ -48,6 +51,8 @@ The TUI implements the following workflows as defined in specs
 - **Daemon Management**: Start and stop the Apple Container daemon with safety
   confirmations and structured status visibility (`running`, `stopped`,
   `unknown`).
+- **Local Kubernetes Clusters**: List, create, start, delete, load images into,
+  and write kubeconfig for Apple Container-managed local Kubernetes clusters.
 - **Safety Features**: Dry-run mode for all operations; command preview before
   execution; type-to-confirm for destructive actions; JSONL command logging with
   automatic rotation.
@@ -57,8 +62,9 @@ The TUI implements the following workflows as defined in specs
 - **In Scope**: Local Apple Container CLI wrapper with keyboard navigation,
   command safety, and observability.
 - **Out of Scope**: Remote container management, cloud integrations, telemetry,
-  multi-platform support (Windows/Linux), container orchestration (Kubernetes),
-  container networking configuration, volume management beyond CLI defaults.
+  multi-platform support (Windows/Linux), remote Kubernetes clusters, workload
+  orchestration, container networking configuration, volume management beyond
+  CLI defaults.
 
 This overview serves as the baseline for all governance and amendment decisions.
 
@@ -119,4 +125,4 @@ option toggles) MUST include targeted builder/parser and UI-flow tests.
 - Exceptions require written justification in the implementation plan's
 	Complexity Tracking section.
 
-**Version**: 0.3.0 | **Ratified**: 2026-02-11 | **Last Amended**: 2026-03-31
+**Version**: 0.4.0 | **Ratified**: 2026-02-11 | **Last Amended**: 2026-09-15

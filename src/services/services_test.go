@@ -56,6 +56,67 @@ func TestNormalizeRequiredToken(t *testing.T) {
 	}
 }
 
+func TestKubernetesBuilders(t *testing.T) {
+	list, err := KubernetesListBuilder{}.Build()
+	if err != nil || strings.Join(list.Args, " ") != "k8s list" {
+		t.Fatalf("unexpected list command: %v %v", list, err)
+	}
+
+	create, err := KubernetesCreateBuilder{Name: "dev", CPUs: "4", Memory: "8G", RemoveOnStop: true, NodeImage: "kindest/node:latest"}.Build()
+	if err != nil || strings.Join(create.Args, " ") != "k8s create --name dev --cpus 4 --memory 8G --rm --node-image kindest/node:latest" {
+		t.Fatalf("unexpected create command: %v %v", create, err)
+	}
+	start, err := KubernetesStartBuilder{ClusterName: "dev"}.Build()
+	if err != nil || strings.Join(start.Args, " ") != "k8s start --name dev" {
+		t.Fatalf("unexpected start command: %v %v", start, err)
+	}
+	deleteCmd, err := KubernetesDeleteBuilder{ClusterName: "dev"}.Build()
+	if err != nil || strings.Join(deleteCmd.Args, " ") != "k8s delete --name dev" {
+		t.Fatalf("unexpected delete command: %v %v", deleteCmd, err)
+	}
+	load, err := KubernetesLoadImageBuilder{ClusterName: "dev", Image: "demo:latest", Platform: "linux/arm64"}.Build()
+	if err != nil || strings.Join(load.Args, " ") != "k8s load-image --name dev demo:latest --platform linux/arm64" {
+		t.Fatalf("unexpected load-image command: %v %v", load, err)
+	}
+	config, err := KubernetesWriteConfigBuilder{ClusterName: "dev", KubeconfigPath: "/tmp/config"}.Build()
+	if err != nil || strings.Join(config.Args, " ") != "k8s write-config --name dev --kubeconfig /tmp/config" {
+		t.Fatalf("unexpected write-config command: %v %v", config, err)
+	}
+	if _, err := (KubernetesStartBuilder{}).Build(); err == nil {
+		t.Fatal("expected missing cluster name error")
+	}
+	if _, err := (KubernetesLoadImageBuilder{Image: ""}).Build(); err == nil {
+		t.Fatal("expected missing image error")
+	}
+}
+
+func TestParseKubernetesList(t *testing.T) {
+	output := "CLUSTER  NODE  ROLE  STATE  CPUS  MEMORY  ADDR  PORTS\n" +
+		"dev      dev-control-plane  control-plane,worker  running  4  8192 MB  127.0.0.1  6443\n" +
+		"         dev-worker  worker  running  4  8192 MB\n"
+	clusters, err := ParseKubernetesList(output)
+	if err != nil || len(clusters) != 1 {
+		t.Fatalf("unexpected parsed clusters: %#v %v", clusters, err)
+	}
+	if clusters[0].Name != "dev" || len(clusters[0].Nodes) != 2 || clusters[0].State != models.KubernetesClusterStateRunning {
+		t.Fatalf("unexpected cluster: %#v", clusters[0])
+	}
+	clusters, err = ParseKubernetesList("")
+	if err != nil || len(clusters) != 0 {
+		t.Fatalf("expected empty cluster list: %#v %v", clusters, err)
+	}
+	clusters, err = ParseKubernetesList("CLUSTER  NODE  ROLE  STATE  CPUS  MEMORY\nsolo  solo-node  worker  stopped  2  4096 MB\ninvalid\n")
+	if err != nil || len(clusters) != 1 || clusters[0].Name != "solo" || clusters[0].State != models.KubernetesClusterStateStopped {
+		t.Fatalf("expected one valid cluster while ignoring malformed row: %#v %v", clusters, err)
+	}
+	liveOutput := "CLUSTER  NODE          ROLE                  STATE    CPUS  MEMORY    ADDR  PORTS\n" +
+		"         sighup-local  control-plane,worker  stopped  6     16384 MB        6445->6443\n"
+	clusters, err = ParseKubernetesList(liveOutput)
+	if err != nil || len(clusters) != 1 || clusters[0].Name != "sighup-local" || clusters[0].Memory != "16384 MB" || clusters[0].Ports != "6445->6443" {
+		t.Fatalf("expected blank-cluster control-plane row to be recovered: %#v %v", clusters, err)
+	}
+}
+
 func TestBuilders(t *testing.T) {
 	start := StartContainerBuilder{ContainerID: "abc"}
 	cmd, err := start.Build()

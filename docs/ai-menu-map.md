@@ -32,6 +32,11 @@ ContainerList
 |  |  |- MachineLogs
 |  |  `- MachineEditResources
 |  `- MachineCreate
+|- KubernetesClusterList
+|  |- KubernetesClusterSubmenu
+|  |  |- KubernetesLoadImage
+|  |  `- KubernetesWriteConfig
+|  `- KubernetesCreate
 |- DaemonControl
 `- Help
 ```
@@ -43,6 +48,7 @@ ContainerList
 - `screenChangeMsg` is the primary navigation message
 - `BackToListMsg` returns from nested flows to their parent list view
 - `BackToSubmenuMsg` returns from nested container or image detail flows to the active submenu
+- Kubernetes forms return to the cluster list or selected-cluster submenu through their screen-change targets
 - New screens are not complete until they are added to both the message definitions and the `AppModel` switch logic
 
 ## Screen Ownership
@@ -65,6 +71,11 @@ ContainerList
 | MachineLogs | Show logs for selected machine | `logs` action from machine submenu | [src/ui/machine_logs.go](src/ui/machine_logs.go) | [src/services/machine_logs_builder.go](src/services/machine_logs_builder.go) |
 | MachineEditResources | Edit CPUs, memory, and home mount | `edit resources` action from machine submenu | [src/ui/machine_edit_resources.go](src/ui/machine_edit_resources.go) | [src/services/machine_set_builder.go](src/services/machine_set_builder.go) |
 | MachineCreate | Create a container machine from an image | `c` from machine list | [src/ui/machine_create.go](src/ui/machine_create.go) | [src/services/machine_create_builder.go](src/services/machine_create_builder.go) |
+| KubernetesClusterList | Browse local Kubernetes clusters and nodes | `k` from container list | [src/ui/kubernetes_cluster_list.go](src/ui/kubernetes_cluster_list.go) | [src/services/kubernetes_builders.go](src/services/kubernetes_builders.go), [src/services/kubernetes_parser.go](src/services/kubernetes_parser.go) |
+| KubernetesClusterSubmenu | Actions for the selected local cluster | `enter` on a cluster row | [src/ui/kubernetes_cluster_submenu.go](src/ui/kubernetes_cluster_submenu.go) | [src/services/kubernetes_builders.go](src/services/kubernetes_builders.go) |
+| KubernetesCreate | Create a local cluster with preview | `c` from cluster list or Create from submenu | [src/ui/kubernetes_create.go](src/ui/kubernetes_create.go) | [src/services/kubernetes_builders.go](src/services/kubernetes_builders.go) |
+| KubernetesLoadImage | Load an image into the selected cluster with preview | Load image from cluster submenu | [src/ui/kubernetes_load_image.go](src/ui/kubernetes_load_image.go) | [src/services/kubernetes_builders.go](src/services/kubernetes_builders.go) |
+| KubernetesWriteConfig | Write kubeconfig for the selected cluster with preview | Write kubeconfig from cluster submenu | [src/ui/kubernetes_write_config.go](src/ui/kubernetes_write_config.go) | [src/services/kubernetes_builders.go](src/services/kubernetes_builders.go) |
 | FilePicker | Select build source file | `b` from image list | [src/ui/file_picker.go](src/ui/file_picker.go) | build source detection services under [src/services](src/services) |
 | Build | Build image from selected file | file chosen in file picker | [src/ui/build.go](src/ui/build.go) | [src/services/build_image_builder.go](src/services/build_image_builder.go), [src/services/build_file_detector.go](src/services/build_file_detector.go) |
 | DaemonControl | Daemon status and start/stop actions | `m` from container list | [src/ui/daemon_control.go](src/ui/daemon_control.go) | [src/services/check_daemon_builder.go](src/services/check_daemon_builder.go), [src/services/daemon_parser.go](src/services/daemon_parser.go), [src/services/start_daemon_builder.go](src/services/start_daemon_builder.go), [src/services/stop_daemon_builder.go](src/services/stop_daemon_builder.go) |
@@ -116,6 +127,15 @@ ContainerList
 - Machine list parsing is owned by [src/services/machine_parser.go](src/services/machine_parser.go); it must accept Apple Container 1.0 `status` and numeric byte `memory` fields as well as older `state`/string-memory fixtures
 - Registry parsing is owned by [src/services/registry_parser.go](src/services/registry_parser.go); it must preserve Apple Container 1.0 `name`, `username`, `creationDate`, and `modificationDate` fields
 
+### Kubernetes Branch
+
+- File: [src/ui/container_list.go](src/ui/container_list.go)
+- `k` opens [src/ui/kubernetes_cluster_list.go](src/ui/kubernetes_cluster_list.go)
+- The cluster list directly runs `container k8s list`; `c` opens cluster creation and `enter` opens [src/ui/kubernetes_cluster_submenu.go](src/ui/kubernetes_cluster_submenu.go)
+- The submenu owns refresh, start, delete, create, load-image, write-config, and back behavior
+- Kubernetes command composition is owned by [src/services/kubernetes_builders.go](src/services/kubernetes_builders.go); terminal-table parsing is owned by [src/services/kubernetes_parser.go](src/services/kubernetes_parser.go)
+- Create, start, load-image, and write-config require command previews; delete requires the exact cluster name in the type-to-confirm modal; all operations honor dry-run through the shared executor
+
 ### Build Branch
 
 - File selection starts in [src/ui/file_picker.go](src/ui/file_picker.go)
@@ -163,6 +183,13 @@ ContainerList
 2. Add or update command builders in [src/services](src/services)
 3. If status shape changes, update [src/services/daemon_parser.go](src/services/daemon_parser.go)
 4. Keep unknown-state fallback behavior intact unless intentionally changing it
+
+### Change the Kubernetes Workflow
+
+1. Start with [src/ui/kubernetes_cluster_list.go](src/ui/kubernetes_cluster_list.go) for list behavior or [src/ui/kubernetes_cluster_submenu.go](src/ui/kubernetes_cluster_submenu.go) for selected-cluster actions
+2. Add or adjust exact CLI arguments in [src/services/kubernetes_builders.go](src/services/kubernetes_builders.go) and update its tests
+3. Preserve preview/type-to-confirm behavior and dry-run compatibility for state-changing commands
+4. Update [src/ui/messages.go](src/ui/messages.go), [src/ui/app.go](src/ui/app.go), UI-flow tests, and this map when screens or routes change
 
 ## Guardrails For Future Agents
 

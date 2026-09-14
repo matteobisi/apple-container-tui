@@ -22,59 +22,70 @@ type AppModel struct {
 	selectedContainer *models.Container
 	selectedImage     *models.Image
 	selectedMachine   *models.ContainerMachine
+	selectedCluster   *models.KubernetesCluster
 	navDebugEnabled   bool
 
-	containerList   ContainerListScreen
-	containerSub    ContainerSubmenuScreen
-	containerLogs   ContainerLogsScreen
-	containerShell  ContainerShellScreen
-	imageList       ImageListScreen
-	imageSub        ImageSubmenuScreen
-	imageInspect    ImageInspectScreen
-	imagePull       ImagePullScreen
-	registries      RegistriesScreen
-	machineList     MachineListScreen
-	machineSub      MachineSubmenuScreen
-	machineInspect  MachineInspectScreen
-	machineLogs     MachineLogsScreen
-	machineEditRes  MachineEditResourcesScreen
-	machineCreate   MachineCreateScreen
-	filePicker      FilePickerScreen
-	buildScreen     BuildScreen
-	containerExport ContainerExportScreen
-	daemonControl   DaemonControlScreen
-	help            HelpScreen
-	spinner         SpinnerModel
+	containerList         ContainerListScreen
+	containerSub          ContainerSubmenuScreen
+	containerLogs         ContainerLogsScreen
+	containerShell        ContainerShellScreen
+	imageList             ImageListScreen
+	imageSub              ImageSubmenuScreen
+	imageInspect          ImageInspectScreen
+	imagePull             ImagePullScreen
+	registries            RegistriesScreen
+	machineList           MachineListScreen
+	machineSub            MachineSubmenuScreen
+	machineInspect        MachineInspectScreen
+	machineLogs           MachineLogsScreen
+	machineEditRes        MachineEditResourcesScreen
+	machineCreate         MachineCreateScreen
+	kubernetesList        KubernetesClusterListScreen
+	kubernetesSub         KubernetesClusterSubmenuScreen
+	kubernetesCreate      KubernetesCreateScreen
+	kubernetesLoadImage   KubernetesLoadImageScreen
+	kubernetesWriteConfig KubernetesWriteConfigScreen
+	filePicker            FilePickerScreen
+	buildScreen           BuildScreen
+	containerExport       ContainerExportScreen
+	daemonControl         DaemonControlScreen
+	help                  HelpScreen
+	spinner               SpinnerModel
 }
 
 // NewAppModel creates the initial app model.
 func NewAppModel(executor services.CommandExecutor, version string) AppModel {
 	return AppModel{
-		keys:            DefaultKeyMap(),
-		active:          ScreenContainerList,
-		stack:           []ActiveScreen{},
-		navDebugEnabled: os.Getenv("ACTUI_DEBUG_NAV") == "1",
-		containerList:   NewContainerListScreen(executor),
-		containerSub:    NewContainerSubmenuScreen(executor),
-		containerLogs:   NewContainerLogsScreen(executor),
-		containerShell:  NewContainerShellScreen(executor),
-		imageList:       NewImageListScreen(executor),
-		imageSub:        NewImageSubmenuScreen(executor),
-		imageInspect:    NewImageInspectScreen(executor),
-		imagePull:       NewImagePullScreen(executor),
-		registries:      NewRegistriesScreen(executor),
-		machineList:     NewMachineListScreen(executor),
-		machineSub:      NewMachineSubmenuScreen(executor),
-		machineInspect:  NewMachineInspectScreen(executor),
-		machineLogs:     NewMachineLogsScreen(executor),
-		machineEditRes:  NewMachineEditResourcesScreen(executor),
-		machineCreate:   NewMachineCreateScreen(executor),
-		filePicker:      NewFilePickerScreen(executor),
-		buildScreen:     NewBuildScreen(executor, ""),
-		containerExport: NewContainerExportScreen(executor),
-		daemonControl:   NewDaemonControlScreen(executor),
-		help:            HelpScreen{Version: version},
-		spinner:         NewSpinnerModel(),
+		keys:                  DefaultKeyMap(),
+		active:                ScreenContainerList,
+		stack:                 []ActiveScreen{},
+		navDebugEnabled:       os.Getenv("ACTUI_DEBUG_NAV") == "1",
+		containerList:         NewContainerListScreen(executor),
+		containerSub:          NewContainerSubmenuScreen(executor),
+		containerLogs:         NewContainerLogsScreen(executor),
+		containerShell:        NewContainerShellScreen(executor),
+		imageList:             NewImageListScreen(executor),
+		imageSub:              NewImageSubmenuScreen(executor),
+		imageInspect:          NewImageInspectScreen(executor),
+		imagePull:             NewImagePullScreen(executor),
+		registries:            NewRegistriesScreen(executor),
+		machineList:           NewMachineListScreen(executor),
+		machineSub:            NewMachineSubmenuScreen(executor),
+		machineInspect:        NewMachineInspectScreen(executor),
+		machineLogs:           NewMachineLogsScreen(executor),
+		machineEditRes:        NewMachineEditResourcesScreen(executor),
+		machineCreate:         NewMachineCreateScreen(executor),
+		kubernetesList:        NewKubernetesClusterListScreen(executor),
+		kubernetesSub:         NewKubernetesClusterSubmenuScreen(executor),
+		kubernetesCreate:      NewKubernetesCreateScreen(executor),
+		kubernetesLoadImage:   NewKubernetesLoadImageScreen(executor),
+		kubernetesWriteConfig: NewKubernetesWriteConfigScreen(executor),
+		filePicker:            NewFilePickerScreen(executor),
+		buildScreen:           NewBuildScreen(executor, ""),
+		containerExport:       NewContainerExportScreen(executor),
+		daemonControl:         NewDaemonControlScreen(executor),
+		help:                  HelpScreen{Version: version},
+		spinner:               NewSpinnerModel(),
 	}
 }
 
@@ -107,6 +118,11 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.machineLogs, _ = m.machineLogs.Update(message)
 		m.machineEditRes, _ = m.machineEditRes.Update(message)
 		m.machineCreate, _ = m.machineCreate.Update(message)
+		m.kubernetesList, _ = m.kubernetesList.Update(message)
+		m.kubernetesSub, _ = m.kubernetesSub.Update(message)
+		m.kubernetesCreate, _ = m.kubernetesCreate.Update(message)
+		m.kubernetesLoadImage, _ = m.kubernetesLoadImage.Update(message)
+		m.kubernetesWriteConfig, _ = m.kubernetesWriteConfig.Update(message)
 		m.filePicker, _ = m.filePicker.Update(message)
 		m.buildScreen, _ = m.buildScreen.Update(message)
 		m.containerExport, _ = m.containerExport.Update(message)
@@ -143,6 +159,13 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.machineLogs = m.machineLogs.SetMachine(machineCopy)
 			m.machineEditRes = m.machineEditRes.SetMachine(machineCopy)
 		}
+		if message.cluster != nil {
+			clusterCopy := *message.cluster
+			m.selectedCluster = &clusterCopy
+			m.kubernetesSub = m.kubernetesSub.SetCluster(clusterCopy)
+			m.kubernetesLoadImage = m.kubernetesLoadImage.SetCluster(clusterCopy)
+			m.kubernetesWriteConfig = m.kubernetesWriteConfig.SetCluster(clusterCopy)
+		}
 		if message.target == ScreenImagePull {
 			if origin == ScreenImageList {
 				m.imagePull = m.imagePull.SetReturnTarget(ScreenImageList)
@@ -155,6 +178,13 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.filePicker = m.filePicker.SetReturnTarget(ScreenImageList)
 			} else {
 				m.filePicker = m.filePicker.SetReturnTarget(ScreenContainerList)
+			}
+		}
+		if message.target == ScreenKubernetesCreate {
+			if origin == ScreenKubernetesClusterSubmenu {
+				m.kubernetesCreate = m.kubernetesCreate.SetReturnTarget(ScreenKubernetesClusterSubmenu)
+			} else {
+				m.kubernetesCreate = m.kubernetesCreate.SetReturnTarget(ScreenKubernetesClusterList)
 			}
 		}
 		m.active = message.target
@@ -192,6 +222,17 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case ScreenMachineCreate:
 			m.machineCreate = m.machineCreate.Reset()
 			cmd = m.machineCreate.Init()
+		case ScreenKubernetesClusterList:
+			cmd = m.kubernetesList.Init()
+		case ScreenKubernetesClusterSubmenu:
+			cmd = m.kubernetesSub.Init()
+		case ScreenKubernetesCreate:
+			m.kubernetesCreate = m.kubernetesCreate.Reset()
+			cmd = m.kubernetesCreate.Init()
+		case ScreenKubernetesLoadImage:
+			cmd = m.kubernetesLoadImage.Init()
+		case ScreenKubernetesWriteConfig:
+			cmd = m.kubernetesWriteConfig.Init()
 		case ScreenFilePicker:
 			cmd = m.filePicker.Init()
 		case ScreenBuild:
@@ -271,6 +312,26 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case ScreenMachineCreate:
 			updated, updateCmd := m.machineCreate.Update(msg)
 			m.machineCreate = updated
+			cmd = tea.Batch(cmd, updateCmd)
+		case ScreenKubernetesClusterList:
+			updated, updateCmd := m.kubernetesList.Update(msg)
+			m.kubernetesList = updated
+			cmd = tea.Batch(cmd, updateCmd)
+		case ScreenKubernetesClusterSubmenu:
+			updated, updateCmd := m.kubernetesSub.Update(msg)
+			m.kubernetesSub = updated
+			cmd = tea.Batch(cmd, updateCmd)
+		case ScreenKubernetesCreate:
+			updated, updateCmd := m.kubernetesCreate.Update(msg)
+			m.kubernetesCreate = updated
+			cmd = tea.Batch(cmd, updateCmd)
+		case ScreenKubernetesLoadImage:
+			updated, updateCmd := m.kubernetesLoadImage.Update(msg)
+			m.kubernetesLoadImage = updated
+			cmd = tea.Batch(cmd, updateCmd)
+		case ScreenKubernetesWriteConfig:
+			updated, updateCmd := m.kubernetesWriteConfig.Update(msg)
+			m.kubernetesWriteConfig = updated
 			cmd = tea.Batch(cmd, updateCmd)
 		case ScreenContainerSubmenu:
 			updated, updateCmd := m.containerSub.Update(msg)
@@ -365,6 +426,16 @@ func (m AppModel) View() string {
 		return m.machineEditRes.View() + "\n" + status
 	case ScreenMachineCreate:
 		return m.machineCreate.View() + "\n" + status
+	case ScreenKubernetesClusterList:
+		return m.kubernetesList.View() + "\n" + status
+	case ScreenKubernetesClusterSubmenu:
+		return m.kubernetesSub.View() + "\n" + status
+	case ScreenKubernetesCreate:
+		return m.kubernetesCreate.View() + "\n" + status
+	case ScreenKubernetesLoadImage:
+		return m.kubernetesLoadImage.View() + "\n" + status
+	case ScreenKubernetesWriteConfig:
+		return m.kubernetesWriteConfig.View() + "\n" + status
 	case ScreenFilePicker:
 		return m.filePicker.View() + "\n" + status
 	case ScreenBuild:
@@ -430,6 +501,30 @@ func (m AppModel) statusBarInfo() (string, string) {
 		label = "Create Machine"
 		if m.machineCreate.preview != nil {
 			preview = m.machineCreate.preview.Command.String()
+		}
+	case ScreenKubernetesClusterList:
+		label = "Kubernetes Clusters"
+	case ScreenKubernetesClusterSubmenu:
+		label = "Kubernetes Actions"
+		if m.kubernetesSub.preview != nil {
+			preview = m.kubernetesSub.preview.Command.String()
+		} else if m.kubernetesSub.confirm != nil {
+			preview = m.kubernetesSub.confirm.Command.String()
+		}
+	case ScreenKubernetesCreate:
+		label = "Create Kubernetes Cluster"
+		if m.kubernetesCreate.preview != nil {
+			preview = m.kubernetesCreate.preview.Command.String()
+		}
+	case ScreenKubernetesLoadImage:
+		label = "Load Kubernetes Image"
+		if m.kubernetesLoadImage.preview != nil {
+			preview = m.kubernetesLoadImage.preview.Command.String()
+		}
+	case ScreenKubernetesWriteConfig:
+		label = "Write Kubernetes Kubeconfig"
+		if m.kubernetesWriteConfig.preview != nil {
+			preview = m.kubernetesWriteConfig.preview.Command.String()
 		}
 	case ScreenFilePicker:
 		label = "File Picker"
@@ -497,6 +592,16 @@ func (m AppModel) isLoading() bool {
 		return m.machineEditRes.loading
 	case ScreenMachineCreate:
 		return m.machineCreate.loading
+	case ScreenKubernetesClusterList:
+		return m.kubernetesList.loading
+	case ScreenKubernetesClusterSubmenu:
+		return m.kubernetesSub.loading
+	case ScreenKubernetesCreate:
+		return m.kubernetesCreate.loading
+	case ScreenKubernetesLoadImage:
+		return m.kubernetesLoadImage.loading
+	case ScreenKubernetesWriteConfig:
+		return m.kubernetesWriteConfig.loading
 	case ScreenImagePull:
 		return m.imagePull.loading
 	case ScreenBuild:
@@ -563,6 +668,16 @@ func (m AppModel) initForActive() tea.Cmd {
 		return m.machineEditRes.Init()
 	case ScreenMachineCreate:
 		return m.machineCreate.Init()
+	case ScreenKubernetesClusterList:
+		return m.kubernetesList.Init()
+	case ScreenKubernetesClusterSubmenu:
+		return m.kubernetesSub.Init()
+	case ScreenKubernetesCreate:
+		return m.kubernetesCreate.Init()
+	case ScreenKubernetesLoadImage:
+		return m.kubernetesLoadImage.Init()
+	case ScreenKubernetesWriteConfig:
+		return m.kubernetesWriteConfig.Init()
 	case ScreenFilePicker:
 		return m.filePicker.Init()
 	case ScreenBuild:

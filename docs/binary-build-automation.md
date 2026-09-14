@@ -6,7 +6,7 @@ This runbook describes how the repository builds and validates the `actui` binar
 
 - Workflow file: `.github/workflows/build-binary.yml`
 - Workflow name: `Build Binary`
-- Build command: `GOOS=darwin GOARCH=arm64 go build -o actui ./cmd/actui`
+- Build command: `GOOS=darwin GOARCH=arm64 go build -ldflags "-X main.version=<tag without v>" -o actui ./cmd/actui`
 
 ## Qualifying Triggers
 
@@ -20,6 +20,7 @@ Qualifying updates include merged feature work and merged dependency updates.
 - Artifact name format: `actui-<os>-<arch>`
 - Current artifact: `actui-darwin-arm64`
 - Retention policy: explicit `retention-days` configured in workflow
+- Version artifact: `release-version`, containing canonical `vMAJOR.MINOR.PATCH` text
 
 ## SBOM Generation
 
@@ -39,10 +40,11 @@ Every successful build produces a Software Bill of Materials (SBOM) alongside th
 The SBOM is generated immediately after `go build` completes, before any upload steps:
 
 ```
- GOOS=darwin GOARCH=arm64 go build -o actui ./cmd/actui
+ compute next semantic tag
+  → GOOS=darwin GOARCH=arm64 go build -ldflags "-X main.version=<tag without v>" -o actui ./cmd/actui
   → anchore/sbom-action writes actui-darwin-arm64.spdx.json
-    → upload-artifact uploads as 'actui-darwin-arm64-sbom'
-      → Publish Release workflow downloads both artifacts
+    → upload-artifact uploads binary, SBOM, and 'release-version'
+      → Publish Release workflow downloads all three artifacts
         → SBOM verified (jq format check) before release
           → actui-darwin-arm64.spdx.json attached to GitHub Release
 ```
@@ -115,7 +117,7 @@ push to main
   → Build Binary workflow (.github/workflows/build-binary.yml)
     → job "Build actui binary" success
       → Publish Release workflow (.github/workflows/publish-release.yml) triggered via workflow_run
-        → GitHub Release created with actui-darwin-arm64 and actui-darwin-arm64.spdx.json attached
+        → reads the release-version artifact and creates the matching GitHub Release
           → GitHub provenance attestation generated for both release assets
 ```
 
@@ -154,15 +156,17 @@ Rules:
 - Tag prefix: `v`
 - Starting version: `v0.1.0` (when no prior automated release exists)
 - Increment strategy: patch component only (`PATCH + 1`), major and minor stay fixed
-- Version is computed at release time by querying existing `gh release list` output and finding the highest `v*.*.*` tag
+- The build workflow queries existing `gh release list` output, finds the highest `v*.*.*` tag, and computes the next tag before compilation
+- The build passes the tag without `v` using `-ldflags "-X main.version=<tag without v>"`, then uploads the canonical tag as the `release-version` artifact
+- The publish workflow downloads and validates `release-version`; it uses that value for idempotency and `gh release create` without recomputing a tag
 
-To change the version increment strategy (e.g., bump minor), update the version-computation step in `.github/workflows/publish-release.yml` and update this doc before the change takes effect.
+To change the version increment strategy (e.g., bump minor), update the version-computation step in `.github/workflows/build-binary.yml` and update this doc before the change takes effect.
 
 ### Duplicate and Rerun Behavior
 
 Release publication is idempotent. If the `Publish Release` job runs more than once for the same computed tag (e.g., due to a workflow rerun), it:
 
-1. Computes the next version tag as normal
+1. Reads the release tag produced by the triggering build
 2. Checks whether a release with that tag already exists (`gh release view`)
 3. If the tag exists: logs a `::notice::` annotation and exits cleanly without publishing a duplicate
 4. If the tag does not exist: publishes as normal
@@ -216,7 +220,7 @@ The `::notice::` log line is informational. If you need a new release despite th
 1. Go to the repository → Actions tab.
 2. Select the `Publish Release` workflow.
 3. Open the run that corresponds to the failing or skipped job.
-4. Expand step logs: `Compute next version tag`, `Check for duplicate release`, `Publish release` for detailed output.
+4. Expand step logs: `Download release version artifact`, `Read release version`, `Check for duplicate release`, `Publish release` for detailed output.
 
 ### Operator Validation Checklist for Release Automation
 

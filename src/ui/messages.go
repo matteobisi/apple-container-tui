@@ -36,6 +36,16 @@ const (
 	ScreenMachineEditResources ActiveScreen = "machine-edit-resources"
 	// ScreenMachineCreate creates a container machine.
 	ScreenMachineCreate ActiveScreen = "machine-create"
+	// ScreenKubernetesClusterList shows local Kubernetes clusters.
+	ScreenKubernetesClusterList ActiveScreen = "kubernetes-cluster-list"
+	// ScreenKubernetesClusterSubmenu shows actions for a selected Kubernetes cluster.
+	ScreenKubernetesClusterSubmenu ActiveScreen = "kubernetes-cluster-submenu"
+	// ScreenKubernetesCreate creates a local Kubernetes cluster.
+	ScreenKubernetesCreate ActiveScreen = "kubernetes-create"
+	// ScreenKubernetesLoadImage loads an image into a Kubernetes cluster.
+	ScreenKubernetesLoadImage ActiveScreen = "kubernetes-load-image"
+	// ScreenKubernetesWriteConfig writes a kubeconfig for a Kubernetes cluster.
+	ScreenKubernetesWriteConfig ActiveScreen = "kubernetes-write-config"
 	// ScreenFilePicker shows the build file picker.
 	ScreenFilePicker ActiveScreen = "file-picker"
 	// ScreenBuild shows the build workflow.
@@ -53,6 +63,7 @@ type screenChangeMsg struct {
 	container *models.Container
 	image     *models.Image
 	machine   *models.ContainerMachine
+	cluster   *models.KubernetesCluster
 	push      bool
 }
 
