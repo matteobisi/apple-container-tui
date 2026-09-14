@@ -109,6 +109,12 @@ func TestParseKubernetesList(t *testing.T) {
 	if err != nil || len(clusters) != 1 || clusters[0].Name != "solo" || clusters[0].State != models.KubernetesClusterStateStopped {
 		t.Fatalf("expected one valid cluster while ignoring malformed row: %#v %v", clusters, err)
 	}
+	liveOutput := "CLUSTER  NODE          ROLE                  STATE    CPUS  MEMORY    ADDR  PORTS\n" +
+		"         sighup-local  control-plane,worker  stopped  6     16384 MB        6445->6443\n"
+	clusters, err = ParseKubernetesList(liveOutput)
+	if err != nil || len(clusters) != 1 || clusters[0].Name != "sighup-local" || clusters[0].Memory != "16384 MB" || clusters[0].Ports != "6445->6443" {
+		t.Fatalf("expected blank-cluster control-plane row to be recovered: %#v %v", clusters, err)
+	}
 }
 
 func TestBuilders(t *testing.T) {

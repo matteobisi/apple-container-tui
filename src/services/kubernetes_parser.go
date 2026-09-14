@@ -17,18 +17,26 @@ func ParseKubernetesList(output string) ([]models.KubernetesCluster, error) {
 			continue
 		}
 		name, offset := currentName, 0
-		if len(fields) >= 7 && !isNodeName(fields[0]) {
+		if len(fields) >= 7 && isKubernetesRole(fields[2]) {
 			name, currentName, offset = fields[0], fields[0], 1
+		}
+		if name == "" && len(fields) >= 6 && isKubernetesRole(fields[1]) && strings.Contains(fields[1], "control-plane") {
+			name, currentName = clusterNameFromControlPlane(fields[0]), clusterNameFromControlPlane(fields[0])
 		}
 		if name == "" || len(fields)-offset < 5 {
 			continue
 		}
 		node := models.KubernetesNode{Name: fields[offset], Role: fields[offset+1], State: normalizeKubernetesState(fields[offset+2]), CPUs: fields[offset+3], Memory: fields[offset+4]}
-		if len(fields)-offset > 5 {
-			node.Address = fields[offset+5]
+		remainder := fields[offset+5:]
+		if len(remainder) > 0 && isMemoryUnit(remainder[0]) {
+			node.Memory += " " + remainder[0]
+			remainder = remainder[1:]
 		}
-		if len(fields)-offset > 6 {
-			node.Ports = strings.Join(fields[offset+6:], " ")
+		if len(remainder) == 1 && strings.Contains(remainder[0], "->") {
+			node.Ports = remainder[0]
+		} else if len(remainder) > 0 {
+			node.Address = remainder[0]
+			node.Ports = strings.Join(remainder[1:], " ")
 		}
 		cluster := clusters[name]
 		if cluster == nil {
@@ -50,7 +58,18 @@ func ParseKubernetesList(output string) ([]models.KubernetesCluster, error) {
 	return result, nil
 }
 
-func isNodeName(value string) bool { return strings.Contains(value, "-") }
+func isKubernetesRole(value string) bool {
+	return strings.Contains(value, "control-plane") || value == "worker"
+}
+
+func clusterNameFromControlPlane(nodeName string) string {
+	return strings.TrimSuffix(nodeName, "-control-plane")
+}
+
+func isMemoryUnit(value string) bool {
+	return value == "MB" || value == "GB" || value == "MiB" || value == "GiB"
+}
+
 func normalizeKubernetesState(value string) models.KubernetesClusterState {
 	switch strings.ToLower(value) {
 	case "running":
