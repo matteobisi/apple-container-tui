@@ -16,7 +16,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v4.2.2, Node 24 compatible
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2, Node 24 compatible
         with:
           persist-credentials: false
 
@@ -25,8 +25,32 @@ jobs:
         with:
           go-version-file: go.mod
 
+      - name: Compute next version tag
+        id: compute-version
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          LATEST_TAG=$(gh release list --limit 100 --json tagName --jq '.[].tagName' 2>/dev/null \
+            | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' \
+            | sort -V \
+            | tail -1 || true)
+
+          if [ -z "$LATEST_TAG" ]; then
+            NEXT_TAG="v0.1.0"
+          else
+            MAJOR=$(echo "$LATEST_TAG" | cut -d. -f1 | tr -d 'v')
+            MINOR=$(echo "$LATEST_TAG" | cut -d. -f2)
+            PATCH=$(echo "$LATEST_TAG" | cut -d. -f3)
+            NEXT_TAG="v${MAJOR}.${MINOR}.$((PATCH + 1))"
+          fi
+
+          printf '%s\n' "$NEXT_TAG" > release-version.txt
+          echo "tag_name=${NEXT_TAG}" >> "$GITHUB_OUTPUT"
+
       - name: Build actui
-        run: GOOS=darwin GOARCH=arm64 go build -o actui ./cmd/actui
+        env:
+          RELEASE_TAG: ${{ steps.compute-version.outputs.tag_name }}
+        run: GOOS=darwin GOARCH=arm64 go build -ldflags "-X main.version=${RELEASE_TAG#v}" -o actui ./cmd/actui
 
       # T003 (US1): Generate SBOM from the repository source tree immediately after the binary
       # is compiled. Syft resolves the full Go module dependency graph from go.mod/go.sum
@@ -40,7 +64,7 @@ jobs:
           upload-artifact: false
 
       - name: Upload artifact
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2, Node 24 compatible
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2, Node 24 compatible
         with:
           name: actui-darwin-arm64
           path: actui
@@ -50,9 +74,17 @@ jobs:
       # T004 (US2): Upload the SBOM as a separately named artifact so it is independently
       # downloadable from the workflow run and consumable by the release workflow.
       - name: Upload SBOM artifact
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2, Node 24 compatible
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2, Node 24 compatible
         with:
           name: actui-darwin-arm64-sbom
           path: actui-darwin-arm64.spdx.json
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload release version artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2, Node 24 compatible
+        with:
+          name: release-version
+          path: release-version.txt
           if-no-files-found: error
           retention-days: 14

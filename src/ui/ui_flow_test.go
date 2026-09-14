@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"errors"
 	"strings"
 	"testing"
 
@@ -11,10 +12,19 @@ import (
 
 type flowExecutor struct {
 	listOutput string
+	k8sOutput  string
 	result     models.Result
 }
 
 func (f flowExecutor) Execute(cmd models.Command) (models.Result, error) {
+	if len(cmd.Args) > 1 && cmd.Args[0] == "k8s" && cmd.Args[1] == "list" {
+		output := f.k8sOutput
+		if output == "" {
+			output = "CLUSTER NODE ROLE STATE CPUS MEMORY ADDR PORTS\n" +
+				"dev-cluster dev-cluster-control-plane control-plane running 4 8G 127.0.0.1:6443 6443\n"
+		}
+		return models.Result{Stdout: output, Status: models.ResultSuccess}, nil
+	}
 	if len(cmd.Args) > 0 && cmd.Args[0] == "list" {
 		return models.Result{Stdout: f.listOutput, Status: models.ResultSuccess}, nil
 	}
@@ -240,6 +250,79 @@ func TestMachineCreateFlow(t *testing.T) {
 	updated, cmd = updated.Update(machineCreateResultMsg{result: models.Result{Status: models.ResultSuccess}})
 	if cmd == nil || updated.result == nil {
 		t.Fatalf("expected create result and return command")
+	}
+}
+
+func TestKubernetesFlow(t *testing.T) {
+	cluster := models.KubernetesCluster{
+		Name:  "dev-cluster",
+		State: models.KubernetesClusterStateStopped,
+		Nodes: []models.KubernetesNode{{Name: "dev-cluster-control-plane", Role: "control-plane", State: models.KubernetesClusterStateStopped}},
+	}
+
+	list := NewKubernetesClusterListScreen(flowExecutor{})
+	updatedList, _ := list.Update(kubernetesListLoadedMsg{clusters: []models.KubernetesCluster{cluster}})
+	_, cmd := updatedList.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	if cmd == nil {
+		t.Fatalf("expected cluster submenu navigation")
+	}
+	change, ok := cmd().(screenChangeMsg)
+	if !ok || change.target != ScreenKubernetesClusterSubmenu || change.cluster == nil || change.cluster.Name != cluster.Name {
+		t.Fatalf("unexpected cluster navigation: %#v", change)
+	}
+
+	submenu := NewKubernetesClusterSubmenuScreen(flowExecutor{}).SetCluster(cluster)
+	if !strings.Contains(submenu.View(), "Start cluster") {
+		t.Fatalf("expected start action for stopped cluster")
+	}
+	submenu.cursor = 1
+	updatedSubmenu, _ := submenu.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	if updatedSubmenu.preview == nil || !strings.Contains(updatedSubmenu.preview.Command.String(), "k8s start --name dev-cluster") {
+		t.Fatalf("expected start preview")
+	}
+
+	deleteOption := len(submenu.options) - 3
+	submenu.cursor = deleteOption
+	updatedSubmenu, _ = submenu.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	if updatedSubmenu.confirm == nil {
+		t.Fatalf("expected type-to-confirm delete")
+	}
+	_, cmd = list.Update(tea.KeyMsg{Type: tea.KeyEscape})
+	if change, ok := cmd().(screenChangeMsg); !ok || change.target != ScreenContainerList {
+		t.Fatalf("unexpected list back navigation")
+	}
+}
+
+func TestKubernetesUnavailableMessage(t *testing.T) {
+	screen := NewKubernetesClusterListScreen(flowExecutor{})
+	updated, _ := screen.Update(kubernetesListLoadedMsg{err: errors.New("unknown command k8s")})
+	if !strings.Contains(updated.View(), "Kubernetes support is unavailable") {
+		t.Fatalf("expected unavailable Kubernetes message: %s", updated.View())
+	}
+}
+
+func TestKubernetesFormPreviews(t *testing.T) {
+	cluster := models.KubernetesCluster{Name: "dev-cluster"}
+
+	create := NewKubernetesCreateScreen(flowExecutor{})
+	create.inputs[0].SetValue("demo")
+	updatedCreate, _ := create.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	if updatedCreate.preview == nil || !strings.Contains(updatedCreate.preview.Command.String(), "k8s create --name demo") {
+		t.Fatalf("expected create preview")
+	}
+
+	load := NewKubernetesLoadImageScreen(flowExecutor{}).SetCluster(cluster)
+	load.inputs[0].SetValue("nginx:latest")
+	updatedLoad, _ := load.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	if updatedLoad.preview == nil || !strings.Contains(updatedLoad.preview.Command.String(), "k8s load-image --name dev-cluster nginx:latest") {
+		t.Fatalf("expected load-image preview")
+	}
+
+	writeConfig := NewKubernetesWriteConfigScreen(flowExecutor{}).SetCluster(cluster)
+	writeConfig.input.SetValue("/tmp/kubeconfig")
+	updatedWriteConfig, _ := writeConfig.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	if updatedWriteConfig.preview == nil || !strings.Contains(updatedWriteConfig.preview.Command.String(), "k8s write-config --name dev-cluster --kubeconfig /tmp/kubeconfig") {
+		t.Fatalf("expected write-config preview")
 	}
 }
 

@@ -12,9 +12,16 @@ import (
 	"container-tui/src/ui"
 )
 
-var version = "0.1.12"
+var version = "dev"
 
 func main() {
+	if err := newRootCmd().Execute(); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+}
+
+func newRootCmd() *cobra.Command {
 	var dryRun bool
 
 	rootCmd := &cobra.Command{
@@ -76,8 +83,5 @@ func main() {
 	rootCmd.Version = version
 	rootCmd.SetVersionTemplate("actui version {{.Version}}\n")
 
-	if err := rootCmd.Execute(); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
+	return rootCmd
 }

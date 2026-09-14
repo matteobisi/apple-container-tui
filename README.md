@@ -11,7 +11,7 @@
 
 ## Overview
 
-Apple Container TUI (`actui`) lets you list, start, stop, delete, and export containers; manage Apple Container 1.0 machines; pull and build images; browse registries; and control the daemon — all from the terminal with safe command previews and confirmation prompts before any destructive action.
+Apple Container TUI (`actui`) lets you list, start, stop, delete, and export containers; manage Apple Container machines and local Kubernetes clusters; pull and build images; browse registries; and control the daemon. State-changing actions use command previews, while destructive actions require explicit confirmation.
 
 This repository is a proof-of-concept showcasing [spec-kit](https://www.msbiro.net), a structured AI-assisted development workflow. Full process notes are published on [www.msbiro.net](https://www.msbiro.net).
 
@@ -19,6 +19,7 @@ This repository is a proof-of-concept showcasing [spec-kit](https://www.msbiro.n
 
 - Container list with action submenus (start / stop / logs / shell / export)
 - Apple Container 1.0 machine management (`M`) — list, create, inspect, logs, start/stop, edit resources, set default, delete
+- Local Kubernetes cluster management (`k`) — list, create, start, delete, load images, write kubeconfig
 - Safe delete with type-to-confirm
 - Image management (`i`) — list, pull, build, prune, inspect, delete
 - Dedicated registries view (`g`)
@@ -75,6 +76,7 @@ Or download the pre-built `actui-darwin-arm64` binary from the [latest release](
 | Container list | `d` | Delete (type-to-confirm) |
 | Container list | `i` | Open image management |
 | Container list | `M` | Open container machine management |
+| Container list | `k` | Open local Kubernetes cluster management |
 | Container list | `m` | Daemon management |
 | Container list | `r` | Refresh |
 | Machine list | `enter` | Open machine submenu |
@@ -149,7 +151,9 @@ Repository security is enforced via OSSF Scorecard, Dependabot, and branch prote
 
 ## Releases & Binaries
 
-Merging to `main` automatically triggers a build and publishes a versioned GitHub Release with the `actui-darwin-arm64` binary and its SBOM. See [docs/binary-build-automation.md](docs/binary-build-automation.md) for the full release pipeline.
+Source builds report `actui version dev`. Release builds receive the semantic release tag without its `v` prefix at link time, so `actui --version` matches the associated GitHub release label after removing `v`.
+
+Merging to `main` automatically triggers a build and publishes a versioned GitHub Release with the `actui-darwin-arm64` binary and its SBOM. The build uploads the canonical release-version artifact; publishing consumes that same value rather than calculating another tag. See [docs/binary-build-automation.md](docs/binary-build-automation.md) for the full release pipeline.
 
 ## Contributing
 

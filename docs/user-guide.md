@@ -5,8 +5,7 @@
 Apple Container TUI is a keyboard-first terminal UI for listing containers,
 starting or stopping them, exporting stopped containers, managing Apple Container 1.0
 machines, pulling images, building from Containerfiles, browsing runtime registries, and managing the
-Apple Container daemon. Every action shows a command preview before execution,
-with optional dry-run mode for safe practice.
+Apple Container daemon. It also manages local Apple Container Kubernetes clusters. Every state-changing action shows a command preview before execution, with optional dry-run mode for safe practice; destructive actions require type-to-confirm.
 
 ## Prerequisites
 
@@ -155,6 +154,16 @@ Resource edits update CPUs, memory, and home mount (`rw`, `ro`, or `none`). Chan
 
 Machine listing reads `container machine list --format json` and supports Apple Container 1.0's `status` field and numeric byte memory values.
 
+## Workflow: Manage Local Kubernetes Clusters
+
+1. Press `k` from the main container list to open local Kubernetes clusters.
+2. Press `r` to refresh, `c` to create a cluster, or `enter` on a cluster to open its action menu.
+3. The action menu supports refresh, start, load-image, write-config, delete, and create. The underlying commands are `container k8s list`, `container k8s create`, `container k8s start`, `container k8s load-image`, `container k8s write-config`, and `container k8s delete`.
+4. Create, start, load-image, and write-config show a command preview before execution. For delete, type the exact cluster name; `esc` cancels and returns safely.
+5. Run `./actui --dry-run` to inspect commands without changing local clusters.
+
+The cluster list presents an empty-state message when no local clusters exist. If `container k8s list` fails, it displays the error and keeps `r` for retry and `esc` to return to the container list.
+
 ## Workflow: Export a Stopped Container
 
 1. Select a stopped container and press `enter`
@@ -273,3 +282,7 @@ Logs are stored at:
 ## Help Screen
 
 Press `?` from any screen to review shortcuts and paths.
+
+## Version Output
+
+Run `./actui --version` to identify the build. Source builds report `actui version dev`. Published binaries receive their GitHub release tag without the leading `v`, so a `v0.1.13` release reports `actui version 0.1.13`.

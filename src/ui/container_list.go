@@ -105,7 +105,7 @@ func (m ContainerListScreen) Update(msg tea.Msg) (ContainerListScreen, tea.Cmd) 
 		}
 
 		switch message.String() {
-		case "up", "k":
+		case "up":
 			m.cursor = max(0, m.cursor-1)
 		case "down", "j":
 			m.cursor = min(len(m.containers)-1, m.cursor+1)
@@ -118,6 +118,8 @@ func (m ContainerListScreen) Update(msg tea.Msg) (ContainerListScreen, tea.Cmd) 
 			return m, func() tea.Msg { return screenChangeMsg{target: ScreenDaemonControl} }
 		case "M":
 			return m, func() tea.Msg { return screenChangeMsg{target: ScreenMachineList, push: true} }
+		case "k":
+			return m, func() tea.Msg { return screenChangeMsg{target: ScreenKubernetesClusterList, push: true} }
 		case "?":
 			return m, func() tea.Msg { return screenChangeMsg{target: ScreenHelp} }
 		case "d":
@@ -182,7 +184,7 @@ func (m ContainerListScreen) View() string {
 	builder.WriteString(table.Render(tableWidth, m.cursor))
 	builder.WriteString(strings.Repeat("─", tableWidth) + "\n")
 
-	builder.WriteString("\n" + RenderMuted("Keys: up/down, enter=submenu, s=start, t=stop, d=delete(!), i=images, M=machines, r=refresh, m=manage, ?=help, q=quit") + "\n")
+	builder.WriteString("\n" + RenderMuted("Keys: up/down, enter=submenu, s=start, t=stop, d=delete(!), i=images, M=machines, k=kubernetes, r=refresh, m=manage, ?=help, q=quit") + "\n")
 
 	if m.preview != nil {
 		builder.WriteString("\n")
