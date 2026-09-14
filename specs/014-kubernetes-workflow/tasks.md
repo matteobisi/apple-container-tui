@@ -151,7 +151,7 @@
 - [x] T040 Run formatting on Kubernetes Go source and tests with `gofmt` for `src/models/kubernetes_cluster.go`, `src/services/kubernetes_*.go`, `src/ui/kubernetes_*.go`, `src/services/services_test.go`, `src/ui/ui_flow_test.go`, and `cmd/actui/main_test.go`
 - [x] T041 Run focused service, UI, CLI-version, workflow, and documentation tests with `go test ./src/services ./src/ui ./cmd/actui ./tests/integration`
 - [x] T042 Run the complete automated suite with `go test ./...`
-- [ ] T043 Perform the macOS 26.x Apple Silicon manual quickstart, including `container k8s --help`, cluster list, every preview, dry-run, deletion cancellation, and release-version comparison, following `specs/014-kubernetes-workflow/quickstart.md`
+- [x] T043 Perform the macOS 26.x Apple Silicon manual quickstart, including `container k8s --help`, cluster list, every preview, dry-run, deletion cancellation, and release-version comparison, following `specs/014-kubernetes-workflow/quickstart.md`
 - [x] T044 Re-check the constitution table and command mapping against the implementation, then record any remaining manual-validation evidence in `specs/014-kubernetes-workflow/quickstart.md`
 
 ---
