@@ -64,7 +64,7 @@ jobs:
           upload-artifact: false
 
       - name: Upload artifact
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2, Node 24 compatible
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2, Node 24 compatible
         with:
           name: actui-darwin-arm64
           path: actui
@@ -74,7 +74,7 @@ jobs:
       # T004 (US2): Upload the SBOM as a separately named artifact so it is independently
       # downloadable from the workflow run and consumable by the release workflow.
       - name: Upload SBOM artifact
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2, Node 24 compatible
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2, Node 24 compatible
         with:
           name: actui-darwin-arm64-sbom
           path: actui-darwin-arm64.spdx.json
@@ -82,7 +82,7 @@ jobs:
           retention-days: 14
 
       - name: Upload release version artifact
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2, Node 24 compatible
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2, Node 24 compatible
         with:
           name: release-version
           path: release-version.txt
