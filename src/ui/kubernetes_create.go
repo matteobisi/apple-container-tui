@@ -72,7 +72,7 @@ func (m KubernetesCreateScreen) Update(msg tea.Msg) (KubernetesCreateScreen, tea
 			m.updateFocus()
 			return m, nil
 		case "enter":
-			command, err := (services.KubernetesCreateBuilder{Name: m.inputs[0].Value(), CPUs: m.inputs[1].Value(), Memory: m.inputs[2].Value(), RemoveOnStop: strings.EqualFold(m.inputs[3].Value(), "y"), NodeImage: m.inputs[4].Value()}).Build()
+			command, err := (services.KubernetesCreateBuilder{Name: m.inputs[0].Value(), CPUs: m.inputs[1].Value(), Memory: m.inputs[2].Value(), RemoveOnStop: strings.EqualFold(m.inputs[3].Value(), "y"), NodeImage: m.inputs[4].Value(), Workers: m.inputs[5].Value(), CNI: m.inputs[6].Value()}).Build()
 			if err != nil {
 				m.errorMsg = err.Error()
 				return m, nil
@@ -91,7 +91,7 @@ func (m KubernetesCreateScreen) Update(msg tea.Msg) (KubernetesCreateScreen, tea
 	return m, nil
 }
 func (m KubernetesCreateScreen) View() string {
-	labels := []string{"Name (optional)", "CPUs (optional)", "Memory (optional)", "Remove on stop (y/N)", "Node image (optional)"}
+	labels := []string{"Name (optional)", "CPUs (optional)", "Memory (optional)", "Remove on stop (y/N)", "Node image (optional)", "Workers (optional)", "CNI manifest path or NONE (optional)"}
 	builder := strings.Builder{}
 	builder.WriteString(RenderTitle("Create Kubernetes Cluster") + "\n\n")
 	for i, label := range labels {
@@ -128,7 +128,7 @@ func (m KubernetesCreateScreen) executeCommandCmd(command models.Command) tea.Cm
 	}
 }
 func newKubernetesCreateInputs() []textinput.Model {
-	placeholders := []string{"k8s-dev", "4", "8G", "N", "ghcr.io/apple/container-kubernetes-node:latest"}
+	placeholders := []string{"cluster-dev", "4", "8G", "N", "ghcr.io/apple/container-kubernetes-node:latest", "0", "NONE"}
 	inputs := make([]textinput.Model, len(placeholders))
 	for i, placeholder := range placeholders {
 		inputs[i] = textinput.New()

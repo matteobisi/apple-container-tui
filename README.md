@@ -11,15 +11,15 @@
 
 ## Overview
 
-Apple Container TUI (`actui`) lets you list, start, stop, delete, and export containers; manage Apple Container machines and local Kubernetes clusters; pull and build images; browse registries; and control the daemon. State-changing actions use command previews, while destructive actions require explicit confirmation.
+Apple Container TUI (`actui`) lets you list, start, stop, delete, commit, and export containers; manage Apple Container machines and local Kubernetes clusters; pull and build images; browse registries; and control the daemon. State-changing actions use command previews, while destructive actions require explicit confirmation.
 
 This repository is a proof-of-concept showcasing [spec-kit](https://www.msbiro.net), a structured AI-assisted development workflow. Full process notes are published on [www.msbiro.net](https://www.msbiro.net).
 
 ## Features
 
-- Container list with action submenus (start / stop / logs / shell / export)
-- Apple Container 1.0 machine management (`M`) — list, create, inspect, logs, start/stop, edit resources, set default, delete
-- Local Kubernetes cluster management (`k`) — list, create, start, delete, load images, write kubeconfig
+- Container list with action submenus (start / stop / logs / shell / export / commit)
+- Apple Container 1.6.1 machine management (`M`) — list, create (image, name, CPUs, memory, home-mount), inspect, logs, start/stop, edit resources, set default, delete
+- Local Kubernetes cluster management (`k`) via `container cluster` — list, create (workers, CNI, node image), delete, load images (optional per-node targets), write kubeconfig (no cluster start action exists on 1.6.1)
 - Safe delete with type-to-confirm
 - Image management (`i`) — list, pull, build, prune, inspect, delete
 - Dedicated registries view (`g`)
@@ -34,7 +34,7 @@ This repository is a proof-of-concept showcasing [spec-kit](https://www.msbiro.n
 ### Prerequisites
 
 - macOS 26.x on Apple Silicon
-- [Apple Container CLI](https://github.com/apple/container) 1.0+ installed and in `PATH`
+- [Apple Container CLI](https://github.com/apple/container) 1.6.1 installed and in `PATH`
 - Go 1.24+ if building from source
 
 Verify the CLI is available:

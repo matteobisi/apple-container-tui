@@ -138,9 +138,6 @@ func (m KubernetesClusterSubmenuScreen) View() string {
 
 func (m KubernetesClusterSubmenuScreen) buildOptions() []kubernetesSubmenuOption {
 	options := []kubernetesSubmenuOption{{"Refresh clusters", "refresh"}}
-	if m.cluster.State != models.KubernetesClusterStateRunning {
-		options = append(options, kubernetesSubmenuOption{"Start cluster", "start"})
-	}
 	return append(options, kubernetesSubmenuOption{"Load image", "load-image"}, kubernetesSubmenuOption{"Write kubeconfig", "write-config"}, kubernetesSubmenuOption{"Delete cluster", "delete"}, kubernetesSubmenuOption{"Create cluster", "create"}, kubernetesSubmenuOption{"Back", "back"})
 }
 
@@ -160,13 +157,6 @@ func (m KubernetesClusterSubmenuScreen) selectOption(option kubernetesSubmenuOpt
 		return m, func() tea.Msg {
 			return screenChangeMsg{target: ScreenKubernetesWriteConfig, cluster: &cluster, push: true}
 		}
-	case "start":
-		command, err := (services.KubernetesStartBuilder{ClusterName: m.cluster.Name}).Build()
-		if err != nil {
-			m.errorMsg = err.Error()
-			return m, nil
-		}
-		m.preview = &CommandPreviewModal{Title: "Start cluster", Command: command}
 	case "delete":
 		command, err := (services.KubernetesDeleteBuilder{ClusterName: m.cluster.Name}).Build()
 		if err != nil {

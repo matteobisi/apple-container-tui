@@ -6,7 +6,7 @@ import (
 	"container-tui/src/models"
 )
 
-// ParseKubernetesList parses the whitespace table printed by `container k8s list`.
+// ParseKubernetesList parses the whitespace table printed by `container cluster list`.
 func ParseKubernetesList(output string) ([]models.KubernetesCluster, error) {
 	clusters := map[string]*models.KubernetesCluster{}
 	order := []string{}

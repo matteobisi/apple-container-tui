@@ -13,7 +13,7 @@ type KubernetesListBuilder struct{}
 func (KubernetesListBuilder) Validate() error { return nil }
 
 func (KubernetesListBuilder) Build() (models.Command, error) {
-	return models.Command{Executable: "container", Args: []string{"k8s", "list"}}, nil
+	return models.Command{Executable: "container", Args: []string{"cluster", "list"}}, nil
 }
 
 type KubernetesCreateBuilder struct {
@@ -22,6 +22,8 @@ type KubernetesCreateBuilder struct {
 	Memory       string
 	RemoveOnStop bool
 	NodeImage    string
+	Workers      string
+	CNI          string
 }
 
 func (b KubernetesCreateBuilder) Validate() error {
@@ -46,6 +48,12 @@ func (b KubernetesCreateBuilder) Validate() error {
 			return err
 		}
 	}
+	if strings.TrimSpace(b.Workers) != "" {
+		value, err := strconv.Atoi(strings.TrimSpace(b.Workers))
+		if err != nil || value < 0 {
+			return fmt.Errorf("workers must be a non-negative integer")
+		}
+	}
 	return nil
 }
 
@@ -53,7 +61,7 @@ func (b KubernetesCreateBuilder) Build() (models.Command, error) {
 	if err := b.Validate(); err != nil {
 		return models.Command{}, err
 	}
-	args := []string{"k8s", "create"}
+	args := []string{"cluster", "create"}
 	if b.Name != "" {
 		value, _ := normalizeRequiredToken(b.Name, "cluster name")
 		args = append(args, "--name", value)
@@ -72,17 +80,13 @@ func (b KubernetesCreateBuilder) Build() (models.Command, error) {
 		value, _ := normalizeRequiredToken(b.NodeImage, "node image")
 		args = append(args, "--node-image", value)
 	}
-	return models.Command{Executable: "container", Args: args}, nil
-}
-
-type KubernetesStartBuilder struct{ ClusterName string }
-
-func (b KubernetesStartBuilder) Build() (models.Command, error) {
-	name, err := normalizeRequiredToken(b.ClusterName, "cluster name")
-	if err != nil {
-		return models.Command{}, err
+	if strings.TrimSpace(b.Workers) != "" && strings.TrimSpace(b.Workers) != "0" {
+		args = append(args, "--workers", strings.TrimSpace(b.Workers))
 	}
-	return models.Command{Executable: "container", Args: []string{"k8s", "start", "--name", name}}, nil
+	if strings.TrimSpace(b.CNI) != "" {
+		args = append(args, "--cni", strings.TrimSpace(b.CNI))
+	}
+	return models.Command{Executable: "container", Args: args}, nil
 }
 
 type KubernetesDeleteBuilder struct{ ClusterName string }
@@ -92,17 +96,22 @@ func (b KubernetesDeleteBuilder) Build() (models.Command, error) {
 	if err != nil {
 		return models.Command{}, err
 	}
-	return models.Command{Executable: "container", Args: []string{"k8s", "delete", "--name", name}}, nil
+	return models.Command{Executable: "container", Args: []string{"cluster", "delete", "--name", name}}, nil
 }
 
-type KubernetesLoadImageBuilder struct{ ClusterName, Image, Platform string }
+type KubernetesLoadImageBuilder struct {
+	ClusterName string
+	Image       string
+	Platform    string
+	Nodes       []string
+}
 
 func (b KubernetesLoadImageBuilder) Build() (models.Command, error) {
 	image, err := normalizeRequiredToken(b.Image, "image")
 	if err != nil {
 		return models.Command{}, err
 	}
-	args := []string{"k8s", "load-image"}
+	args := []string{"cluster", "load-image"}
 	if b.ClusterName != "" {
 		name, err := normalizeRequiredToken(b.ClusterName, "cluster name")
 		if err != nil {
@@ -118,6 +127,16 @@ func (b KubernetesLoadImageBuilder) Build() (models.Command, error) {
 		}
 		args = append(args, "--platform", platform)
 	}
+	for _, node := range b.Nodes {
+		node = strings.TrimSpace(node)
+		if node == "" {
+			continue
+		}
+		if strings.ContainsAny(node, " \t") {
+			return models.Command{}, fmt.Errorf("node name must not contain whitespace")
+		}
+		args = append(args, "--node", node)
+	}
 	return models.Command{Executable: "container", Args: args}, nil
 }
 
@@ -128,7 +147,7 @@ func (b KubernetesWriteConfigBuilder) Build() (models.Command, error) {
 	if err != nil {
 		return models.Command{}, err
 	}
-	args := []string{"k8s", "write-config", "--name", name}
+	args := []string{"cluster", "write-config", "--name", name}
 	if strings.TrimSpace(b.KubeconfigPath) != "" {
 		args = append(args, "--kubeconfig", strings.TrimSpace(b.KubeconfigPath))
 	}

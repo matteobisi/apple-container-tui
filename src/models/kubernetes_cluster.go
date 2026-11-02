@@ -14,7 +14,7 @@ const (
 	KubernetesClusterStateUnknown KubernetesClusterState = "unknown"
 )
 
-// KubernetesNode is a node reported by `container k8s list`.
+// KubernetesNode is a node reported by `container cluster list`.
 type KubernetesNode struct {
 	Name    string
 	Role    string
