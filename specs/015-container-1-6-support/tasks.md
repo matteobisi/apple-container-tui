@@ -18,8 +18,8 @@
 
 **Purpose**: Baseline before changes
 
-- [ ] T001 [P] Record passing baseline: run `go build ./... && go test ./...` on a clean tree and note failures (if any) before editing
-- [ ] T002 [P] Confirm backend: run `container --version` (expect 1.6.1) and `container cluster list` and save output shape for parser comparison
+- [X] T001 [P] Record passing baseline: run `go build ./... && go test ./...` on a clean tree and note failures (if any) before editing
+- [X] T002 [P] Confirm backend: run `container --version` (expect 1.6.1) and `container cluster list` and save output shape for parser comparison
 
 ---
 
@@ -29,7 +29,7 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T003 Confirm 1.6.1-only target: verify `container k8s --help` fails with unknown command and `container cluster list` header matches the existing parser's expected columns (CLUSTER NODE ROLE STATE CPUS MEMORY ADDR PORTS); record result in research.md if it differs
+- [X] T003 Confirm 1.6.1-only target: verify `container k8s --help` fails with unknown command and `container cluster list` header matches the existing parser's expected columns (CLUSTER NODE ROLE STATE CPUS MEMORY ADDR PORTS); record result in research.md if it differs
 
 **Checkpoint**: Foundation ready — 1.6.1-only target confirmed, user stories can begin
 
@@ -43,15 +43,15 @@
 
 ### Tests for User Story 1
 
-- [ ] T004 [US1] Update builder unit tests in src/services/services_test.go: expect `cluster list`, `cluster create --name dev --cpus 4 --memory 8G --rm --node-image kindest/node:latest`, `cluster delete --name dev`, `cluster load-image --name dev demo:latest --platform linux/arm64`, `cluster write-config --name dev --kubeconfig /tmp/config`; delete the `k8s start` expectation
+- [X] T004 [US1] Update builder unit tests in src/services/services_test.go: expect `cluster list`, `cluster create --name dev --cpus 4 --memory 8G --rm --node-image kindest/node:latest`, `cluster delete --name dev`, `cluster load-image --name dev demo:latest --platform linux/arm64`, `cluster write-config --name dev --kubeconfig /tmp/config`; delete the `k8s start` expectation
 
 ### Implementation for User Story 1
 
-- [ ] T005 [P] [US1] Rename `k8s` to `cluster` in src/services/kubernetes_builders.go (list, create, delete, load-image, write-config) and delete `KubernetesStartBuilder`
-- [ ] T006 [P] [US1] Update stale command comments in src/services/kubernetes_parser.go (`container k8s list` → `container cluster list`) and src/models/kubernetes_cluster.go
-- [ ] T007 [US1] Remove the start option and its preview handler from src/ui/kubernetes_cluster_submenu.go (options become refresh / load-image / write-config / delete / create / back)
-- [ ] T008 [P] [US1] Change the create-form name placeholder from `k8s-dev` to `cluster-dev` in src/ui/kubernetes_create.go (field list itself is extended in US2)
-- [ ] T009 [US1] Update Kubernetes UI flow tests in src/ui/ui_flow_test.go: `cluster list/create/load-image/write-config` preview strings, no `Start cluster` option, error-path message still asserted via the generic unknown-command text
+- [X] T005 [P] [US1] Rename `k8s` to `cluster` in src/services/kubernetes_builders.go (list, create, delete, load-image, write-config) and delete `KubernetesStartBuilder`
+- [X] T006 [P] [US1] Update stale command comments in src/services/kubernetes_parser.go (`container k8s list` → `container cluster list`) and src/models/kubernetes_cluster.go
+- [X] T007 [US1] Remove the start option and its preview handler from src/ui/kubernetes_cluster_submenu.go (options become refresh / load-image / write-config / delete / create / back)
+- [X] T008 [P] [US1] Change the create-form name placeholder from `k8s-dev` to `cluster-dev` in src/ui/kubernetes_create.go (field list itself is extended in US2)
+- [X] T009 [US1] Update Kubernetes UI flow tests in src/ui/ui_flow_test.go: `cluster list/create/load-image/write-config` preview strings, no `Start cluster` option, error-path message still asserted via the generic unknown-command text
 
 **Checkpoint**: US1 fully functional — Kubernetes workflow works end-to-end on 1.6.1 with defaults; `go test ./...` passes
 
@@ -65,15 +65,15 @@
 
 ### Tests for User Story 2
 
-- [ ] T010 [US2] Add builder unit tests in src/services/services_test.go: create with `--workers 2 --cni NONE` (and empty workers/CNI omitted); load-image with `--node n1 --node n2` (and empty nodes omitted)
+- [X] T010 [US2] Add builder unit tests in src/services/services_test.go: create with `--workers 2 --cni NONE` (and empty workers/CNI omitted); load-image with `--node n1 --node n2` (and empty nodes omitted)
 
 ### Implementation for User Story 2
 
-- [ ] T011 [US2] Extend `KubernetesCreateBuilder` in src/services/kubernetes_builders.go with `Workers` (non-negative integer, `0`/empty omitted → no flag) and `CNI` (manifest path or `NONE`, empty omitted → no flag) fields plus validation
-- [ ] T012 [US2] Extend `KubernetesLoadImageBuilder` in src/services/kubernetes_builders.go with `Nodes []string` (each non-empty trimmed token emitted as a repeated `--node <name>` flag; empty omitted)
-- [ ] T013 [US2] Add Workers and CNI inputs to the create form in src/ui/kubernetes_create.go and pass them into `KubernetesCreateBuilder` on preview
-- [ ] T014 [US2] Add a Nodes (comma-separated) input to src/ui/kubernetes_load_image.go and pass parsed node tokens into `KubernetesLoadImageBuilder` on preview
-- [ ] T015 [US2] Extend Kubernetes UI flow tests in src/ui/ui_flow_test.go: create preview containing `--workers`/`--cni`, load-image preview containing `--node` flags, and default-omission cases
+- [X] T011 [US2] Extend `KubernetesCreateBuilder` in src/services/kubernetes_builders.go with `Workers` (non-negative integer, `0`/empty omitted → no flag) and `CNI` (manifest path or `NONE`, empty omitted → no flag) fields plus validation
+- [X] T012 [US2] Extend `KubernetesLoadImageBuilder` in src/services/kubernetes_builders.go with `Nodes []string` (each non-empty trimmed token emitted as a repeated `--node <name>` flag; empty omitted)
+- [X] T013 [US2] Add Workers and CNI inputs to the create form in src/ui/kubernetes_create.go and pass them into `KubernetesCreateBuilder` on preview
+- [X] T014 [US2] Add a Nodes (comma-separated) input to src/ui/kubernetes_load_image.go and pass parsed node tokens into `KubernetesLoadImageBuilder` on preview
+- [X] T015 [US2] Extend Kubernetes UI flow tests in src/ui/ui_flow_test.go: create preview containing `--workers`/`--cni`, load-image preview containing `--node` flags, and default-omission cases
 
 **Checkpoint**: US1 AND US2 both work — single-node defaults unchanged, multi-worker options previewed and executed correctly
 
@@ -87,13 +87,13 @@
 
 ### Tests for User Story 3
 
-- [ ] T016 [P] [US3] Add commit builder unit tests in src/services/services_test.go: `container commit <id> <reference>` exact args, plus empty-id and empty-reference validation errors (API per T017 contract)
+- [X] T016 [P] [US3] Add commit builder unit tests in src/services/services_test.go: `container commit <id> <reference>` exact args, plus empty-id and empty-reference validation errors (API per T017 contract)
 
 ### Implementation for User Story 3
 
-- [ ] T017 [US3] Create `CommitContainerBuilder{ContainerID, Reference}` in src/services/commit_container_builder.go building `container commit <id> <reference>` with required-token validation on both fields (new file, follows one-builder-per-file convention)
-- [ ] T018 [US3] Add the commit action to src/ui/container_submenu.go: new `Commit container` option for stopped and running containers, image-reference text input following existing form textinput patterns, command preview with explicit approve/cancel, result reporting and dry-run via the shared executor
-- [ ] T019 [US3] Add commit UI flow coverage in src/ui/ui_flow_test.go (or src/ui/ui_additional_test.go if the submenu flow lives there): commit preview shows `container commit <id> <reference>`; empty reference shows a validation message before preview
+- [X] T017 [US3] Create `CommitContainerBuilder{ContainerID, Reference}` in src/services/commit_container_builder.go building `container commit <id> <reference>` with required-token validation on both fields (new file, follows one-builder-per-file convention)
+- [X] T018 [US3] Add the commit action to src/ui/container_submenu.go: new `Commit container` option for stopped and running containers, image-reference text input following existing form textinput patterns, command preview with explicit approve/cancel, result reporting and dry-run via the shared executor
+- [X] T019 [US3] Add commit UI flow coverage in src/ui/ui_flow_test.go (or src/ui/ui_additional_test.go if the submenu flow lives there): commit preview shows `container commit <id> <reference>`; empty reference shows a validation message before preview
 
 **Checkpoint**: All P1 stories (US1–US3) independently functional — rename, multi-worker, and commit each testable alone
 
@@ -107,13 +107,13 @@
 
 ### Tests for User Story 4
 
-- [ ] T020 [US4] Add machine-create builder unit tests in src/services/services_test.go: `container machine create <img> --name <n> --cpus <c> --memory <m> --home-mount <mode>` with empty optionals omitted, plus invalid-cpus and invalid-home-mount validation errors
+- [X] T020 [US4] Add machine-create builder unit tests in src/services/services_test.go: `container machine create <img> --name <n> --cpus <c> --memory <m> --home-mount <mode>` with empty optionals omitted, plus invalid-cpus and invalid-home-mount validation errors
 
 ### Implementation for User Story 4
 
-- [ ] T021 [US4] Extend `MachineCreateBuilder` in src/services/machine_create_builder.go with `CPUs` (positive integer when provided), `Memory` (non-empty token when provided), `HomeMount` (`ro|rw|none` when provided) fields; omit empty optionals from args
-- [ ] T022 [US4] Add CPUs, Memory, and HomeMount inputs to the create form in src/ui/machine_create.go and pass them into `MachineCreateBuilder` on preview
-- [ ] T023 [US4] Extend machine UI flow coverage in src/ui/ui_flow_test.go (or src/ui/ui_additional_test.go): create preview carries the new flags; invalid input shows a validation message before preview
+- [X] T021 [US4] Extend `MachineCreateBuilder` in src/services/machine_create_builder.go with `CPUs` (positive integer when provided), `Memory` (non-empty token when provided), `HomeMount` (`ro|rw|none` when provided) fields; omit empty optionals from args
+- [X] T022 [US4] Add CPUs, Memory, and HomeMount inputs to the create form in src/ui/machine_create.go and pass them into `MachineCreateBuilder` on preview
+- [X] T023 [US4] Extend machine UI flow coverage in src/ui/ui_flow_test.go (or src/ui/ui_additional_test.go): create preview carries the new flags; invalid input shows a validation message before preview
 
 **Checkpoint**: US4 works alongside US1–US3 — machine create/edit consistent with the installed CLI
 
@@ -127,10 +127,10 @@
 
 ### Implementation for User Story 5
 
-- [ ] T024 [P] [US5] Update README.md: Apple Container 1.6.1 as supported backend (prerequisites + verify command), Kubernetes operations as the `container cluster` family with no start action, commit action in features, `--workers`/`--cni`/`--node` and machine CPUs/memory/home-mount options
-- [ ] T025 [P] [US5] Update docs/user-guide.md: replace `container k8s ...` command references with `container cluster ...`, remove the start action, document multi-worker create / node-targeted load-image / commit / extended machine create, bump version references from 1.0/1.5.0-era text to 1.6.1
-- [ ] T026 [P] [US5] Update docs/ai-menu-map.md: Kubernetes branch owns `container cluster` commands via src/services/kubernetes_builders.go with no start path, commit action owned by src/ui/container_submenu.go plus the new builder file, machine-create ownership includes the new fields
-- [ ] T027 [US5] Sweep stale references across README.md, docs/, and src/ (`k8s` command strings, `k8s-dev` placeholder remnants, start-cluster text, pre-1.6 version claims) and fix any misses from T005/T024–T026; verify `src/ui/help.go` backend text matches 1.6.1
+- [X] T024 [P] [US5] Update README.md: Apple Container 1.6.1 as supported backend (prerequisites + verify command), Kubernetes operations as the `container cluster` family with no start action, commit action in features, `--workers`/`--cni`/`--node` and machine CPUs/memory/home-mount options
+- [X] T025 [P] [US5] Update docs/user-guide.md: replace `container k8s ...` command references with `container cluster ...`, remove the start action, document multi-worker create / node-targeted load-image / commit / extended machine create, bump version references from 1.0/1.5.0-era text to 1.6.1
+- [X] T026 [P] [US5] Update docs/ai-menu-map.md: Kubernetes branch owns `container cluster` commands via src/services/kubernetes_builders.go with no start path, commit action owned by src/ui/container_submenu.go plus the new builder file, machine-create ownership includes the new fields
+- [X] T027 [US5] Sweep stale references across README.md, docs/, and src/ (`k8s` command strings, `k8s-dev` placeholder remnants, start-cluster text, pre-1.6 version claims) and fix any misses from T005/T024–T026; verify `src/ui/help.go` backend text matches 1.6.1
 
 **Checkpoint**: Documentation review passes — README plus affected guides agree on backend version, entry points, operations, and safeguards
 
@@ -140,8 +140,8 @@
 
 **Purpose**: Final validation across all stories
 
-- [ ] T028 Run the automated gate: `gofmt -l ./...` clean, `go vet ./...` clean, `go test ./...` all pass; fix any regressions
-- [ ] T029 Run specs/015-container-1-6-support/quickstart.md scenarios 1–6 against Apple Container 1.6.1 (rename, multi-worker create, node-targeted load, commit incl. dry-run, machine options, docs grep) and record outcomes
+- [X] T028 Run the automated gate: `gofmt -l ./...` clean, `go vet ./...` clean, `go test ./...` all pass; fix any regressions
+- [X] T029 Run specs/015-container-1-6-support/quickstart.md scenarios 1–6 against Apple Container 1.6.1 (rename, multi-worker create, node-targeted load, commit incl. dry-run, machine options, docs grep) and record outcomes
 
 ---
 
