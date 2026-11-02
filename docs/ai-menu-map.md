@@ -56,7 +56,7 @@ ContainerList
 | Screen | Purpose | Entry Trigger | Main UI File | Main Service Files |
 |--------|---------|---------------|--------------|--------------------|
 | ContainerList | Root container browser and quick actions | App start | [src/ui/container_list.go](src/ui/container_list.go) | [src/services/list_containers_builder.go](src/services/list_containers_builder.go), [src/services/container_parser.go](src/services/container_parser.go) |
-| ContainerSubmenu | Contextual actions for the selected container | `enter` on container row | [src/ui/container_submenu.go](src/ui/container_submenu.go) | start, stop, logs, shell, export related services under [src/services](src/services) |
+| ContainerSubmenu | Contextual actions for the selected container | `enter` on container row | [src/ui/container_submenu.go](src/ui/container_submenu.go) | start, stop, logs, shell, export, commit related services under [src/services](src/services) |
 | ContainerLogs | Tail logs for selected container | `logs` action from container submenu | [src/ui/container_logs.go](src/ui/container_logs.go) | [src/services/container_logs_builder.go](src/services/container_logs_builder.go) |
 | ContainerShell | Open shell into a running container | `shell` action from container submenu | [src/ui/container_shell.go](src/ui/container_shell.go) | [src/services/container_exec_builder.go](src/services/container_exec_builder.go) |
 | ContainerExport | Export stopped container to OCI archive | `export` action from container submenu | [src/ui/container_export.go](src/ui/container_export.go) | [src/services/export_workflow.go](src/services/export_workflow.go), [src/services/export_container_builder.go](src/services/export_container_builder.go), [src/services/image_save_builder.go](src/services/image_save_builder.go), [src/services/image_delete_builder.go](src/services/image_delete_builder.go) |
@@ -64,7 +64,7 @@ ContainerList
 | ImageSubmenu | Contextual actions for selected image | `enter` on image row | [src/ui/image_submenu.go](src/ui/image_submenu.go) | image inspect and delete services under [src/services](src/services) |
 | ImageInspect | Render detailed image metadata | `inspect` action from image submenu | [src/ui/image_inspect.go](src/ui/image_inspect.go) | [src/services/image_inspect_builder.go](src/services/image_inspect_builder.go) |
 | ImagePull | Pull image workflow with preview | `p` from image list | [src/ui/image_pull.go](src/ui/image_pull.go) | [src/services/pull_image_builder.go](src/services/pull_image_builder.go) |
-| Registries | View runtime-managed registry logins from Apple Container 1.0 JSON | `g` from image list | [src/ui/registries.go](src/ui/registries.go) | [src/services/registry_list_builder.go](src/services/registry_list_builder.go), [src/services/registry_parser.go](src/services/registry_parser.go) |
+| Registries | View runtime-managed registry logins from Apple Container 1.6.1 JSON | `g` from image list | [src/ui/registries.go](src/ui/registries.go) | [src/services/registry_list_builder.go](src/services/registry_list_builder.go), [src/services/registry_parser.go](src/services/registry_parser.go) |
 | MachineList | Root container machine browser | `M` from container list | [src/ui/machine_list.go](src/ui/machine_list.go) | [src/services/machine_list_builder.go](src/services/machine_list_builder.go), [src/services/machine_parser.go](src/services/machine_parser.go) |
 | MachineSubmenu | Contextual actions for selected machine | `enter` on machine row | [src/ui/machine_submenu.go](src/ui/machine_submenu.go) | start, stop, delete, set-default related services under [src/services](src/services) |
 | MachineInspect | Render detailed machine metadata | `inspect` action from machine submenu | [src/ui/machine_inspect.go](src/ui/machine_inspect.go) | [src/services/machine_inspect_builder.go](src/services/machine_inspect_builder.go) |
@@ -93,6 +93,7 @@ ContainerList
   - `d` opens delete confirmation
   - `i` opens [src/ui/image_list.go](src/ui/image_list.go)
   - `M` opens [src/ui/machine_list.go](src/ui/machine_list.go)
+  - `k` opens [src/ui/kubernetes_cluster_list.go](src/ui/kubernetes_cluster_list.go)
   - `m` opens [src/ui/daemon_control.go](src/ui/daemon_control.go)
   - `?` opens [src/ui/help.go](src/ui/help.go)
 
@@ -100,8 +101,9 @@ ContainerList
 
 - File: [src/ui/container_submenu.go](src/ui/container_submenu.go)
 - Option set depends on container state:
-  - Running container: stop, logs, shell
-  - Stopped container: start, logs, export
+  - Running container: stop, logs, shell, commit
+  - Stopped container: start, logs, export, commit
+- Commit prompts for an image reference inline, then previews `container commit <id> <reference>` via [src/services/commit_container_builder.go](src/services/commit_container_builder.go)
 - If a new container-specific workflow is added, this is the default insertion point
 
 ### Image Branch
@@ -120,21 +122,21 @@ ContainerList
 - File: [src/ui/machine_list.go](src/ui/machine_list.go)
 - Primary actions:
   - `enter` opens [src/ui/machine_submenu.go](src/ui/machine_submenu.go)
-  - `c` opens [src/ui/machine_create.go](src/ui/machine_create.go)
+  - `c` opens [src/ui/machine_create.go](src/ui/machine_create.go) (image, name, CPUs, memory, home-mount)
   - `r` refreshes the machine list
 - Submenu actions are owned by [src/ui/machine_submenu.go](src/ui/machine_submenu.go): inspect, logs, start/stop, edit resources, set default, delete
-- Resource edits route through [src/ui/machine_edit_resources.go](src/ui/machine_edit_resources.go) and [src/services/machine_set_builder.go](src/services/machine_set_builder.go)
-- Machine list parsing is owned by [src/services/machine_parser.go](src/services/machine_parser.go); it must accept Apple Container 1.0 `status` and numeric byte `memory` fields as well as older `state`/string-memory fixtures
-- Registry parsing is owned by [src/services/registry_parser.go](src/services/registry_parser.go); it must preserve Apple Container 1.0 `name`, `username`, `creationDate`, and `modificationDate` fields
+- Resource edits route through [src/ui/machine_edit_resources.go](src/ui/machine_edit_resources.go) and [src/services/machine_set_builder.go](src/services/machine_set_builder.go); creation previews via [src/services/machine_create_builder.go](src/services/machine_create_builder.go) (`container machine create`, optional `--cpus/--memory/--home-mount`)
+- Machine list parsing is owned by [src/services/machine_parser.go](src/services/machine_parser.go); it must accept Apple Container 1.6.1 `status` and numeric byte `memory` fields as well as older `state`/string-memory fixtures
+- Registry parsing is owned by [src/services/registry_parser.go](src/services/registry_parser.go); it must preserve Apple Container 1.6.1 `name`, `username`, `creationDate`, and `modificationDate` fields
 
-### Kubernetes Branch
+### Kubernetes Branch (Apple Container 1.6.1)
 
 - File: [src/ui/container_list.go](src/ui/container_list.go)
 - `k` opens [src/ui/kubernetes_cluster_list.go](src/ui/kubernetes_cluster_list.go)
-- The cluster list directly runs `container k8s list`; `c` opens cluster creation and `enter` opens [src/ui/kubernetes_cluster_submenu.go](src/ui/kubernetes_cluster_submenu.go)
-- The submenu owns refresh, start, delete, create, load-image, write-config, and back behavior
-- Kubernetes command composition is owned by [src/services/kubernetes_builders.go](src/services/kubernetes_builders.go); terminal-table parsing is owned by [src/services/kubernetes_parser.go](src/services/kubernetes_parser.go)
-- Create, start, load-image, and write-config require command previews; delete requires the exact cluster name in the type-to-confirm modal; all operations honor dry-run through the shared executor
+- The cluster list directly runs `container cluster list`; `c` opens cluster creation and `enter` opens [src/ui/kubernetes_cluster_submenu.go](src/ui/kubernetes_cluster_submenu.go)
+- The submenu owns refresh, delete, create, load-image, write-config, and back behavior — there is intentionally no start action (upstream removed it in 1.5.0; 1.6.x `cluster` has no start subcommand)
+- Kubernetes command composition is owned by [src/services/kubernetes_builders.go](src/services/kubernetes_builders.go) (`container cluster` family: `--workers`/`--cni` on create, repeatable `--node` on load-image); terminal-table parsing is owned by [src/services/kubernetes_parser.go](src/services/kubernetes_parser.go)
+- Create, load-image, and write-config require command previews; delete requires the exact cluster name in the type-to-confirm modal; all operations honor dry-run through the shared executor
 
 ### Build Branch
 

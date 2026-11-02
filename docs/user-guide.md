@@ -3,14 +3,14 @@
 ## Overview
 
 Apple Container TUI is a keyboard-first terminal UI for listing containers,
-starting or stopping them, exporting stopped containers, managing Apple Container 1.0
+starting or stopping them, committing filesystems to images, exporting stopped containers, managing Apple Container 1.6.1
 machines, pulling images, building from Containerfiles, browsing runtime registries, and managing the
 Apple Container daemon. It also manages local Apple Container Kubernetes clusters. Every state-changing action shows a command preview before execution, with optional dry-run mode for safe practice; destructive actions require type-to-confirm.
 
 ## Prerequisites
 
 - macOS 26.x on Apple Silicon
-- Apple Container CLI 1.0+ installed and in PATH
+- Apple Container CLI 1.6.1 installed and in PATH
 - Go 1.24+ if building from source
 
 Verify the CLI is available:
@@ -64,8 +64,9 @@ Main keys:
 1. Launch `./actui`
 2. Use arrow keys to select a container
 3. Press `enter` to open the container submenu
-4. Choose `Start container`, `Stop container`, `Tail container log`, `Enter container`, or `Export container` when the container is stopped
-5. Confirm command previews where applicable
+4. Choose `Start container`, `Stop container`, `Tail container log`, `Enter container`, `Export container` (when the container is stopped), or `Commit container` (any state)
+5. For commit, enter an image reference (e.g. `my-app:latest`) and confirm the `container commit <id> <reference>` preview
+6. Confirm command previews where applicable
 
 ASCII screenshot:
 
@@ -126,14 +127,14 @@ ASCII screenshot:
 3. Review runtime-managed registry entries by hostname and username
 4. Press `r` to refresh or `esc` to return to the image list
 
-The Registries screen reads Apple Container 1.0 JSON output, including `name`, `username`, `creationDate`, and `modificationDate` fields.
+The Registries screen reads Apple Container 1.6.1 JSON output, including `name`, `username`, `creationDate`, and `modificationDate` fields.
 
 ## Workflow: Manage Container Machines
 
 1. Press `M` from the main container list to open container machines
 2. Use arrow keys to select a machine
 3. Press `enter` to open the machine submenu
-4. Press `c` from the machine list to create a new machine from an image reference
+4. Press `c` from the machine list to create a new machine from an image reference, optionally setting CPUs, memory (`8G`), and home-mount mode (`rw`, `ro`, or `none`)
 5. Choose `Inspect machine`, `View machine logs`, `Start machine`, `Stop machine`, `Edit resources`, `Set as default`, or `Delete machine`
 6. Review command previews before create, start, stop, set-default, and resource edits; type the machine name to confirm delete
 
@@ -152,17 +153,18 @@ ASCII screenshot:
 
 Resource edits update CPUs, memory, and home mount (`rw`, `ro`, or `none`). Changes take effect after the next stop and restart.
 
-Machine listing reads `container machine list --format json` and supports Apple Container 1.0's `status` field and numeric byte memory values.
+Machine listing reads `container machine list --format json` (`status` field and numeric byte memory values). Machine creation maps to `container machine create <image> [--name <name>] [--cpus <n>] [--memory <size>] [--home-mount <ro|rw|none>]`.
 
 ## Workflow: Manage Local Kubernetes Clusters
 
 1. Press `k` from the main container list to open local Kubernetes clusters.
 2. Press `r` to refresh, `c` to create a cluster, or `enter` on a cluster to open its action menu.
-3. The action menu supports refresh, start, load-image, write-config, delete, and create. The underlying commands are `container k8s list`, `container k8s create`, `container k8s start`, `container k8s load-image`, `container k8s write-config`, and `container k8s delete`.
-4. Create, start, load-image, and write-config show a command preview before execution. For delete, type the exact cluster name; `esc` cancels and returns safely.
-5. Run `./actui --dry-run` to inspect commands without changing local clusters.
+3. The action menu supports refresh, load-image, write-config, delete, and create — there is no cluster start action on Apple Container 1.6.1 (restart a stopped node by deleting the cluster and creating it again). The underlying commands are `container cluster list`, `container cluster create`, `container cluster load-image`, `container cluster write-config`, and `container cluster delete`.
+4. Cluster creation supports worker nodes (`--workers`), a CNI manifest path or `NONE` (`--cni`), CPUs, memory, remove-on-stop, and a node image. Image loading supports an optional platform plus comma-separated target nodes (`--node`, repeatable; empty targets load cluster-wide).
+5. Create, load-image, and write-config show a command preview before execution. For delete, type the exact cluster name; `esc` cancels and returns safely.
+6. Run `./actui --dry-run` to inspect commands without changing local clusters.
 
-The cluster list presents an empty-state message when no local clusters exist. If `container k8s list` fails, it displays the error and keeps `r` for retry and `esc` to return to the container list.
+The cluster list presents an empty-state message when no local clusters exist. If `container cluster list` fails, it displays the error and keeps `r` for retry and `esc` to return to the container list.
 
 ## Workflow: Export a Stopped Container
 

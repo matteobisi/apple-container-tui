@@ -23,10 +23,18 @@ func TestKubernetesAndVersionDocumentation(t *testing.T) {
 			t.Errorf("AI menu map missing %q", required)
 		}
 	}
-	for _, required := range []string{"container k8s list", "container k8s create", "container k8s start", "container k8s delete", "container k8s load-image", "container k8s write-config", "--dry-run", "exact cluster name"} {
+	for _, required := range []string{"container cluster list", "container cluster create", "container cluster delete", "container cluster load-image", "container cluster write-config", "container commit", "--dry-run", "exact cluster name", "1.6.1"} {
 		if !strings.Contains(userGuide, required) {
 			t.Errorf("user guide missing %q", required)
 		}
+	}
+	for _, forbidden := range []string{"container k8s list", "container k8s create", "container k8s start", "container k8s delete", "container k8s load-image", "container k8s write-config"} {
+		if strings.Contains(userGuide, forbidden) {
+			t.Errorf("user guide must not reference removed command %q", forbidden)
+		}
+	}
+	if strings.Contains(userGuide, "start action") && !strings.Contains(userGuide, "no cluster start action") {
+		t.Errorf("user guide must document the removed cluster start action")
 	}
 	for _, required := range []string{"release-version", "before compilation", "main.version=<tag without v>", "without recomputing a tag"} {
 		if !strings.Contains(binaryGuide, required) {
