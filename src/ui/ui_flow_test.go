@@ -11,14 +11,14 @@ import (
 )
 
 type flowExecutor struct {
-	listOutput string
-	k8sOutput  string
-	result     models.Result
+	listOutput    string
+	clusterOutput string
+	result        models.Result
 }
 
 func (f flowExecutor) Execute(cmd models.Command) (models.Result, error) {
-	if len(cmd.Args) > 1 && cmd.Args[0] == "k8s" && cmd.Args[1] == "list" {
-		output := f.k8sOutput
+	if len(cmd.Args) > 1 && cmd.Args[0] == "cluster" && cmd.Args[1] == "list" {
+		output := f.clusterOutput
 		if output == "" {
 			output = "CLUSTER NODE ROLE STATE CPUS MEMORY ADDR PORTS\n" +
 				"dev-cluster dev-cluster-control-plane control-plane running 4 8G 127.0.0.1:6443 6443\n"
@@ -239,9 +239,12 @@ func TestMachineCreateFlow(t *testing.T) {
 	screen := NewMachineCreateScreen(flowExecutor{})
 	screen.inputs[0].SetValue("alpine:latest")
 	screen.inputs[1].SetValue("dev")
+	screen.inputs[2].SetValue("4")
+	screen.inputs[3].SetValue("8G")
+	screen.inputs[4].SetValue("ro")
 	updated, _ := screen.Update(tea.KeyMsg{Type: tea.KeyEnter})
-	if updated.preview == nil || !strings.Contains(updated.preview.Command.String(), "machine create alpine:latest --name dev") {
-		t.Fatalf("expected create preview")
+	if updated.preview == nil || !strings.Contains(updated.preview.Command.String(), "machine create alpine:latest --name dev --cpus 4 --memory 8G --home-mount ro") {
+		t.Fatalf("expected create preview with resources")
 	}
 	updated, cmd := updated.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'y'}})
 	if cmd == nil || updated.loading != true {
@@ -250,6 +253,14 @@ func TestMachineCreateFlow(t *testing.T) {
 	updated, cmd = updated.Update(machineCreateResultMsg{result: models.Result{Status: models.ResultSuccess}})
 	if cmd == nil || updated.result == nil {
 		t.Fatalf("expected create result and return command")
+	}
+
+	invalid := NewMachineCreateScreen(flowExecutor{})
+	invalid.inputs[0].SetValue("alpine:latest")
+	invalid.inputs[2].SetValue("0")
+	updatedInvalid, _ := invalid.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	if updatedInvalid.preview != nil || updatedInvalid.errorMsg == "" {
+		t.Fatalf("expected validation message for invalid cpus")
 	}
 }
 
@@ -272,13 +283,13 @@ func TestKubernetesFlow(t *testing.T) {
 	}
 
 	submenu := NewKubernetesClusterSubmenuScreen(flowExecutor{}).SetCluster(cluster)
-	if !strings.Contains(submenu.View(), "Start cluster") {
-		t.Fatalf("expected start action for stopped cluster")
+	if strings.Contains(submenu.View(), "Start cluster") {
+		t.Fatalf("start action must not be offered on container 1.6.1")
 	}
 	submenu.cursor = 1
 	updatedSubmenu, _ := submenu.Update(tea.KeyMsg{Type: tea.KeyEnter})
-	if updatedSubmenu.preview == nil || !strings.Contains(updatedSubmenu.preview.Command.String(), "k8s start --name dev-cluster") {
-		t.Fatalf("expected start preview")
+	if updatedSubmenu.preview != nil && strings.Contains(updatedSubmenu.preview.Command.String(), "start") {
+		t.Fatalf("unexpected start preview")
 	}
 
 	deleteOption := len(submenu.options) - 3
@@ -295,7 +306,7 @@ func TestKubernetesFlow(t *testing.T) {
 
 func TestKubernetesUnavailableMessage(t *testing.T) {
 	screen := NewKubernetesClusterListScreen(flowExecutor{})
-	updated, _ := screen.Update(kubernetesListLoadedMsg{err: errors.New("unknown command k8s")})
+	updated, _ := screen.Update(kubernetesListLoadedMsg{err: errors.New("unknown command cluster")})
 	if !strings.Contains(updated.View(), "Kubernetes support is unavailable") {
 		t.Fatalf("expected unavailable Kubernetes message: %s", updated.View())
 	}
@@ -306,22 +317,25 @@ func TestKubernetesFormPreviews(t *testing.T) {
 
 	create := NewKubernetesCreateScreen(flowExecutor{})
 	create.inputs[0].SetValue("demo")
+	create.inputs[5].SetValue("2")
+	create.inputs[6].SetValue("NONE")
 	updatedCreate, _ := create.Update(tea.KeyMsg{Type: tea.KeyEnter})
-	if updatedCreate.preview == nil || !strings.Contains(updatedCreate.preview.Command.String(), "k8s create --name demo") {
-		t.Fatalf("expected create preview")
+	if updatedCreate.preview == nil || !strings.Contains(updatedCreate.preview.Command.String(), "cluster create --name demo --workers 2 --cni NONE") {
+		t.Fatalf("expected multi-worker create preview: %v", updatedCreate.preview)
 	}
 
 	load := NewKubernetesLoadImageScreen(flowExecutor{}).SetCluster(cluster)
 	load.inputs[0].SetValue("nginx:latest")
+	load.inputs[2].SetValue("n1,n2")
 	updatedLoad, _ := load.Update(tea.KeyMsg{Type: tea.KeyEnter})
-	if updatedLoad.preview == nil || !strings.Contains(updatedLoad.preview.Command.String(), "k8s load-image --name dev-cluster nginx:latest") {
-		t.Fatalf("expected load-image preview")
+	if updatedLoad.preview == nil || !strings.Contains(updatedLoad.preview.Command.String(), "cluster load-image --name dev-cluster nginx:latest --node n1 --node n2") {
+		t.Fatalf("expected node-targeted load-image preview")
 	}
 
 	writeConfig := NewKubernetesWriteConfigScreen(flowExecutor{}).SetCluster(cluster)
 	writeConfig.input.SetValue("/tmp/kubeconfig")
 	updatedWriteConfig, _ := writeConfig.Update(tea.KeyMsg{Type: tea.KeyEnter})
-	if updatedWriteConfig.preview == nil || !strings.Contains(updatedWriteConfig.preview.Command.String(), "k8s write-config --name dev-cluster --kubeconfig /tmp/kubeconfig") {
+	if updatedWriteConfig.preview == nil || !strings.Contains(updatedWriteConfig.preview.Command.String(), "cluster write-config --name dev-cluster --kubeconfig /tmp/kubeconfig") {
 		t.Fatalf("expected write-config preview")
 	}
 }

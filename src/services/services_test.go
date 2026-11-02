@@ -58,35 +58,59 @@ func TestNormalizeRequiredToken(t *testing.T) {
 
 func TestKubernetesBuilders(t *testing.T) {
 	list, err := KubernetesListBuilder{}.Build()
-	if err != nil || strings.Join(list.Args, " ") != "k8s list" {
+	if err != nil || strings.Join(list.Args, " ") != "cluster list" {
 		t.Fatalf("unexpected list command: %v %v", list, err)
 	}
 
 	create, err := KubernetesCreateBuilder{Name: "dev", CPUs: "4", Memory: "8G", RemoveOnStop: true, NodeImage: "kindest/node:latest"}.Build()
-	if err != nil || strings.Join(create.Args, " ") != "k8s create --name dev --cpus 4 --memory 8G --rm --node-image kindest/node:latest" {
+	if err != nil || strings.Join(create.Args, " ") != "cluster create --name dev --cpus 4 --memory 8G --rm --node-image kindest/node:latest" {
 		t.Fatalf("unexpected create command: %v %v", create, err)
 	}
-	start, err := KubernetesStartBuilder{ClusterName: "dev"}.Build()
-	if err != nil || strings.Join(start.Args, " ") != "k8s start --name dev" {
-		t.Fatalf("unexpected start command: %v %v", start, err)
-	}
 	deleteCmd, err := KubernetesDeleteBuilder{ClusterName: "dev"}.Build()
-	if err != nil || strings.Join(deleteCmd.Args, " ") != "k8s delete --name dev" {
+	if err != nil || strings.Join(deleteCmd.Args, " ") != "cluster delete --name dev" {
 		t.Fatalf("unexpected delete command: %v %v", deleteCmd, err)
 	}
 	load, err := KubernetesLoadImageBuilder{ClusterName: "dev", Image: "demo:latest", Platform: "linux/arm64"}.Build()
-	if err != nil || strings.Join(load.Args, " ") != "k8s load-image --name dev demo:latest --platform linux/arm64" {
+	if err != nil || strings.Join(load.Args, " ") != "cluster load-image --name dev demo:latest --platform linux/arm64" {
 		t.Fatalf("unexpected load-image command: %v %v", load, err)
 	}
+	multiCreate, err := KubernetesCreateBuilder{Name: "dev", Workers: "2", CNI: "NONE"}.Build()
+	if err != nil || strings.Join(multiCreate.Args, " ") != "cluster create --name dev --workers 2 --cni NONE" {
+		t.Fatalf("unexpected multi-worker create command: %v %v", multiCreate, err)
+	}
+	zeroWorkers, err := KubernetesCreateBuilder{Name: "dev"}.Build()
+	if err != nil || strings.Contains(strings.Join(zeroWorkers.Args, " "), "--workers") {
+		t.Fatalf("empty workers must be omitted: %v %v", zeroWorkers, err)
+	}
+	nodeLoad, err := KubernetesLoadImageBuilder{ClusterName: "dev", Image: "demo:latest", Nodes: []string{"n1", "n2"}}.Build()
+	if err != nil || strings.Join(nodeLoad.Args, " ") != "cluster load-image --name dev demo:latest --node n1 --node n2" {
+		t.Fatalf("unexpected node-targeted load-image command: %v %v", nodeLoad, err)
+	}
+	if _, err := (KubernetesCreateBuilder{Workers: "bad"}).Build(); err == nil {
+		t.Fatal("expected invalid workers error")
+	}
 	config, err := KubernetesWriteConfigBuilder{ClusterName: "dev", KubeconfigPath: "/tmp/config"}.Build()
-	if err != nil || strings.Join(config.Args, " ") != "k8s write-config --name dev --kubeconfig /tmp/config" {
+	if err != nil || strings.Join(config.Args, " ") != "cluster write-config --name dev --kubeconfig /tmp/config" {
 		t.Fatalf("unexpected write-config command: %v %v", config, err)
 	}
-	if _, err := (KubernetesStartBuilder{}).Build(); err == nil {
+	if _, err := (KubernetesDeleteBuilder{}).Build(); err == nil {
 		t.Fatal("expected missing cluster name error")
 	}
 	if _, err := (KubernetesLoadImageBuilder{Image: ""}).Build(); err == nil {
 		t.Fatal("expected missing image error")
+	}
+}
+
+func TestCommitContainerBuilder(t *testing.T) {
+	cmd, err := CommitContainerBuilder{ContainerID: "abc123", Reference: "demo:actui-test"}.Build()
+	if err != nil || strings.Join(cmd.Args, " ") != "commit abc123 demo:actui-test" {
+		t.Fatalf("unexpected commit command: %v %v", cmd, err)
+	}
+	if _, err := (CommitContainerBuilder{Reference: "demo:latest"}).Build(); err == nil {
+		t.Fatal("expected missing container id error")
+	}
+	if _, err := (CommitContainerBuilder{ContainerID: "abc123"}).Build(); err == nil {
+		t.Fatal("expected missing image reference error")
 	}
 }
 
@@ -232,8 +256,18 @@ func TestBuilders(t *testing.T) {
 	if err != nil || strings.Join(machineCreateCmd.Args, " ") != "machine create alpine:latest --name dev" {
 		t.Fatalf("unexpected machine create command: %v %v", machineCreateCmd, err)
 	}
+	machineCreateFull, err := MachineCreateBuilder{Image: "alpine:latest", Name: "dev", CPUs: "4", Memory: "8G", HomeMount: "ro"}.Build()
+	if err != nil || strings.Join(machineCreateFull.Args, " ") != "machine create alpine:latest --name dev --cpus 4 --memory 8G --home-mount ro" {
+		t.Fatalf("unexpected full machine create command: %v %v", machineCreateFull, err)
+	}
 	if _, err := (MachineCreateBuilder{Image: ""}).Build(); err == nil {
 		t.Fatalf("expected error for missing image")
+	}
+	if _, err := (MachineCreateBuilder{Image: "alpine:latest", CPUs: "0"}).Build(); err == nil {
+		t.Fatalf("expected error for invalid machine cpus")
+	}
+	if _, err := (MachineCreateBuilder{Image: "alpine:latest", HomeMount: "bad"}).Build(); err == nil {
+		t.Fatalf("expected error for invalid home-mount")
 	}
 	if _, err := (MachineSetBuilder{MachineID: "dev", CPUs: "0", Memory: "8G", HomeMount: "rw"}).Build(); err == nil {
 		t.Fatalf("expected error for invalid cpus")

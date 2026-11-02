@@ -80,7 +80,7 @@ func (m MachineCreateScreen) Update(msg tea.Msg) (MachineCreateScreen, tea.Cmd) 
 			m.updateFocus()
 			return m, nil
 		case "enter":
-			cmd, err := (services.MachineCreateBuilder{Image: m.inputs[0].Value(), Name: m.inputs[1].Value()}).Build()
+			cmd, err := (services.MachineCreateBuilder{Image: m.inputs[0].Value(), Name: m.inputs[1].Value(), CPUs: m.inputs[2].Value(), Memory: m.inputs[3].Value(), HomeMount: m.inputs[4].Value()}).Build()
 			if err != nil {
 				m.errorMsg = err.Error()
 				return m, nil
@@ -104,7 +104,10 @@ func (m MachineCreateScreen) View() string {
 	builder := strings.Builder{}
 	builder.WriteString(RenderTitle("Create Machine") + "\n\n")
 	builder.WriteString("Image\n" + m.inputs[0].View() + "\n\n")
-	builder.WriteString("Name (optional)\n" + m.inputs[1].View() + "\n")
+	builder.WriteString("Name (optional)\n" + m.inputs[1].View() + "\n\n")
+	builder.WriteString("CPUs (optional)\n" + m.inputs[2].View() + "\n\n")
+	builder.WriteString("Memory (optional)\n" + m.inputs[3].View() + "\n\n")
+	builder.WriteString("Home mount ro/rw/none (optional)\n" + m.inputs[4].View() + "\n")
 	if m.loading {
 		builder.WriteString("\n" + RenderMuted("Creating machine...") + "\n")
 	}
@@ -148,5 +151,17 @@ func newMachineCreateInputs() []textinput.Model {
 	name.Prompt = ""
 	name.Placeholder = "dev"
 
-	return []textinput.Model{image, name}
+	cpus := textinput.New()
+	cpus.Prompt = ""
+	cpus.Placeholder = "4"
+
+	memory := textinput.New()
+	memory.Prompt = ""
+	memory.Placeholder = "8G"
+
+	homeMount := textinput.New()
+	homeMount.Prompt = ""
+	homeMount.Placeholder = "rw"
+
+	return []textinput.Model{image, name, cpus, memory, homeMount}
 }

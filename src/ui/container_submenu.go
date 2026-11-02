@@ -3,6 +3,7 @@ package ui
 import (
 	"strings"
 
+	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 
@@ -22,15 +23,16 @@ type containerSubmenuOption struct {
 
 // ContainerSubmenuScreen displays actions for the selected container.
 type ContainerSubmenuScreen struct {
-	executor  services.CommandExecutor
-	container models.Container
-	options   []containerSubmenuOption
-	cursor    int
-	loading   bool
-	errorMsg  string
-	result    *models.Result
-	preview   *CommandPreviewModal
-	width     int
+	executor    services.CommandExecutor
+	container   models.Container
+	options     []containerSubmenuOption
+	cursor      int
+	loading     bool
+	errorMsg    string
+	result      *models.Result
+	preview     *CommandPreviewModal
+	commitInput *textinput.Model
+	width       int
 }
 
 func NewContainerSubmenuScreen(executor services.CommandExecutor) ContainerSubmenuScreen {
@@ -43,6 +45,7 @@ func (m ContainerSubmenuScreen) SetContainer(container models.Container) Contain
 	m.errorMsg = ""
 	m.result = nil
 	m.preview = nil
+	m.commitInput = nil
 	m.options = m.buildOptions()
 	return m
 }
@@ -64,6 +67,26 @@ func (m ContainerSubmenuScreen) Update(msg tea.Msg) (ContainerSubmenuScreen, tea
 		m.result = &message.result
 		return m, nil
 	case tea.KeyMsg:
+		if m.commitInput != nil {
+			switch message.String() {
+			case "esc":
+				m.commitInput = nil
+				m.errorMsg = ""
+				return m, nil
+			case "enter":
+				cmd, err := (services.CommitContainerBuilder{ContainerID: m.container.ID, Reference: m.commitInput.Value()}).Build()
+				if err != nil {
+					m.errorMsg = err.Error()
+					return m, nil
+				}
+				m.commitInput = nil
+				m.preview = &CommandPreviewModal{Title: "Commit Container", Command: cmd}
+				return m, nil
+			}
+			updated, cmd := m.commitInput.Update(message)
+			m.commitInput = &updated
+			return m, cmd
+		}
 		if m.preview != nil {
 			switch strings.ToLower(message.String()) {
 			case "y", "enter":
@@ -126,6 +149,13 @@ func (m ContainerSubmenuScreen) Update(msg tea.Msg) (ContainerSubmenuScreen, tea
 				return m, func() tea.Msg {
 					return screenChangeMsg{target: ScreenContainerExport, container: &containerCopy, push: true}
 				}
+			case "commit":
+				input := textinput.New()
+				input.Prompt, input.Placeholder = "", "image:tag"
+				input.Focus()
+				m.commitInput = &input
+				m.errorMsg = ""
+				return m, textinput.Blink
 			default:
 				return m, func() tea.Msg { return screenChangeMsg{target: ScreenContainerList} }
 			}
@@ -181,6 +211,9 @@ func (m ContainerSubmenuScreen) View() string {
 	if m.result != nil {
 		builder.WriteString("\n" + RenderResult(*m.result) + "\n")
 	}
+	if m.commitInput != nil {
+		builder.WriteString("\nImage reference\n" + m.commitInput.View() + "\n")
+	}
 	if m.preview != nil {
 		builder.WriteString("\n" + m.preview.View() + "\n")
 	}
@@ -189,7 +222,7 @@ func (m ContainerSubmenuScreen) View() string {
 }
 
 func (m ContainerSubmenuScreen) buildOptions() []containerSubmenuOption {
-	options := make([]containerSubmenuOption, 0, 5)
+	options := make([]containerSubmenuOption, 0, 6)
 	if m.container.Status == models.ContainerStatusRunning {
 		options = append(options, containerSubmenuOption{label: "Stop container", action: "stop"})
 	} else {
@@ -201,6 +234,7 @@ func (m ContainerSubmenuScreen) buildOptions() []containerSubmenuOption {
 	} else {
 		options = append(options, containerSubmenuOption{label: "Export container", action: "export"})
 	}
+	options = append(options, containerSubmenuOption{label: "Commit container", action: "commit"})
 	options = append(options, containerSubmenuOption{label: "Back", action: "back"})
 	return options
 }

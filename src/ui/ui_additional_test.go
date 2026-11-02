@@ -152,14 +152,51 @@ func TestRegistriesScreenLoadAndView(t *testing.T) {
 
 func TestContainerSubmenuStoppedShowsExport(t *testing.T) {
 	screen := NewContainerSubmenuScreen(flowExecutor{}).SetContainer(models.Container{ID: "abc", Name: "web", Status: models.ContainerStatusStopped})
-	found := false
+	found, commitFound := false, false
 	for _, option := range screen.options {
 		if option.action == "export" {
 			found = true
 		}
+		if option.action == "commit" {
+			commitFound = true
+		}
 	}
 	if !found {
 		t.Fatalf("expected export option for stopped container")
+	}
+	if !commitFound {
+		t.Fatalf("expected commit option for stopped container")
+	}
+}
+
+func TestContainerSubmenuCommitPreview(t *testing.T) {
+	screen := NewContainerSubmenuScreen(flowExecutor{}).SetContainer(models.Container{ID: "abc", Name: "web", Status: models.ContainerStatusStopped})
+	index := -1
+	for i, option := range screen.options {
+		if option.action == "commit" {
+			index = i
+		}
+	}
+	if index < 0 {
+		t.Fatalf("expected commit option")
+	}
+	screen.cursor = index
+	updated, _ := screen.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	if updated.commitInput == nil {
+		t.Fatalf("expected commit reference input")
+	}
+	updated.commitInput.SetValue("demo:actui-test")
+	updated, _ = updated.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	if updated.preview == nil || !strings.Contains(updated.preview.Command.String(), "commit abc demo:actui-test") {
+		t.Fatalf("expected commit preview")
+	}
+
+	empty := NewContainerSubmenuScreen(flowExecutor{}).SetContainer(models.Container{ID: "abc", Name: "web", Status: models.ContainerStatusStopped})
+	empty.cursor = index
+	updatedEmpty, _ := empty.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	updatedEmpty, _ = updatedEmpty.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	if updatedEmpty.errorMsg == "" {
+		t.Fatalf("expected validation message for empty reference")
 	}
 }
 

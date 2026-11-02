@@ -66,7 +66,7 @@ func (m KubernetesLoadImageScreen) Update(msg tea.Msg) (KubernetesLoadImageScree
 			m.updateFocus()
 			return m, nil
 		case "enter":
-			command, err := (services.KubernetesLoadImageBuilder{ClusterName: m.cluster.Name, Image: m.inputs[0].Value(), Platform: m.inputs[1].Value()}).Build()
+			command, err := (services.KubernetesLoadImageBuilder{ClusterName: m.cluster.Name, Image: m.inputs[0].Value(), Platform: m.inputs[1].Value(), Nodes: strings.Split(m.inputs[2].Value(), ",")}).Build()
 			if err != nil {
 				m.errorMsg = err.Error()
 				return m, nil
@@ -86,7 +86,7 @@ func (m KubernetesLoadImageScreen) Update(msg tea.Msg) (KubernetesLoadImageScree
 }
 func (m KubernetesLoadImageScreen) View() string {
 	builder := strings.Builder{}
-	builder.WriteString(RenderTitle("Load Kubernetes Image") + "\n\n" + RenderMuted("Cluster: "+m.cluster.Name) + "\n\nImage\n" + m.inputs[0].View() + "\n\nPlatform (optional)\n" + m.inputs[1].View() + "\n")
+	builder.WriteString(RenderTitle("Load Kubernetes Image") + "\n\n" + RenderMuted("Cluster: "+m.cluster.Name) + "\n\nImage\n" + m.inputs[0].View() + "\n\nPlatform (optional)\n" + m.inputs[1].View() + "\n\nTarget nodes, comma-separated (optional)\n" + m.inputs[2].View() + "\n")
 	if m.loading {
 		builder.WriteString(RenderMuted("Loading image...") + "\n")
 	}
@@ -118,9 +118,10 @@ func (m KubernetesLoadImageScreen) executeCommandCmd(command models.Command) tea
 	}
 }
 func newKubernetesLoadImageInputs() []textinput.Model {
-	image, platform := textinput.New(), textinput.New()
+	image, platform, nodes := textinput.New(), textinput.New(), textinput.New()
 	image.Prompt, image.Placeholder = "", "nginx:latest"
 	image.Focus()
 	platform.Prompt, platform.Placeholder = "", "linux/arm64"
-	return []textinput.Model{image, platform}
+	nodes.Prompt, nodes.Placeholder = "", "node1,node2"
+	return []textinput.Model{image, platform, nodes}
 }
