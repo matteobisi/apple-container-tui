@@ -92,7 +92,7 @@ Failure troubleshooting flow:
 2. Artifact uploads successfully with expected name.
 3. Retention setting is present and matches policy.
 4. Troubleshooting notes are updated for new failure modes.
-5. Manual macOS 26.x verification is completed and recorded before release sign-off.
+5. Manual macOS 27.x verification is completed and recorded before release sign-off.
 
 ## Retention Troubleshooting
 
@@ -102,9 +102,9 @@ Failure troubleshooting flow:
 ## Validation Environment Profile
 
 - Machine: Macbook M4
-- OS: macOS 26.4
+- OS: macOS 27.x
 - Memory: 32GB
-- Apple container version: 0.10.0
+- Apple container version: 1.7.1
 
 ---
 

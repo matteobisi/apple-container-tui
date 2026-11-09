@@ -52,13 +52,6 @@ type KubernetesCreateInput struct {
 	NodeImage    string
 }
 
-// KubernetesLoadImageInput collects image loading settings.
-type KubernetesLoadImageInput struct {
-	ClusterName string
-	Image       string
-	Platform    string
-}
-
 // KubernetesWriteConfigInput collects optional kubeconfig output settings.
 type KubernetesWriteConfigInput struct {
 	ClusterName    string

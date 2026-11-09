@@ -18,8 +18,8 @@ This repository is a proof-of-concept showcasing [spec-kit](https://www.msbiro.n
 ## Features
 
 - Container list with action submenus (start / stop / logs / shell / export / commit)
-- Apple Container 1.6.1 machine management (`M`) — list, create (image, name, CPUs, memory, home-mount), inspect, logs, start/stop, edit resources, set default, delete
-- Local Kubernetes cluster management (`k`) via `container cluster` — list, create (workers, CNI, node image), delete, load images (optional per-node targets), write kubeconfig (no cluster start action exists on 1.6.1)
+- Apple Container 1.7.1 machine management (`M`) — list, create (image, name, CPUs, memory, home-mount), inspect, logs, start/stop, edit resources, set default, delete
+- Local Kubernetes cluster management (`k`) via `container cluster` — list (one row per cluster, `N` toggles per-node detail), create (workers with CPU/memory sizing, shared image store, CNI, node image), delete, write kubeconfig (no cluster start or load-image actions exist on 1.7.1; share the local image store at creation instead)
 - Safe delete with type-to-confirm
 - Image management (`i`) — list, pull, build, prune, inspect, delete
 - Dedicated registries view (`g`)
@@ -33,8 +33,8 @@ This repository is a proof-of-concept showcasing [spec-kit](https://www.msbiro.n
 
 ### Prerequisites
 
-- macOS 26.x on Apple Silicon
-- [Apple Container CLI](https://github.com/apple/container) 1.6.1 installed and in `PATH`
+- macOS 27.x on Apple Silicon
+- [Apple Container CLI](https://github.com/apple/container) 1.7.1 installed and in `PATH`
 - Go 1.24+ if building from source
 
 Verify the CLI is available:

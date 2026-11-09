@@ -1,28 +1,23 @@
 <!--
 Sync Impact Report
-- Version: 0.2.1 -> 0.3.0
-- Modified principles: IV, V
+- Version: 0.3.0 -> 0.4.0
+- Modified principles: II, IV (platform target macOS 26.x -> 27.x)
 - Added sections: None
 - Removed sections: None
 - Templates requiring updates:
 	- .specify/templates/plan-template.md ✅ unchanged (constitution checks already present)
 	- .specify/templates/spec-template.md ✅ unchanged
 	- .specify/templates/tasks-template.md ✅ unchanged
-  - .specify/templates/commands/*.md ✅ N/A (directory not present in repository)
+   - .specify/templates/commands/*.md ✅ N/A (directory not present in repository)
 - Deferred TODOs: None
-- Amendment rationale: Incorporated workflows delivered in
-  `005-expand-container-workflows` and clarified contract artifact policy
-  (spec table or contract document) so governance matches current practice.
-- Amendment rationale: Permitted the bounded local Kubernetes cluster workflow
-  specified in `014-kubernetes-workflow` while retaining remote clusters and
-  workload orchestration as out of scope.
+- Amendment rationale: Container 1.7 support (spec 016) verified on macOS 27.2 with Apple Container 1.7.1; upstream CI moved to macOS 27 runners. Platform target and manual-verification gate move 26.x -> 27.x; Kubernetes workflow description drops the removed load-image operation.
 -->
 # Container TUI Constitution
 
 ## Project Overview
 
 **Container TUI** is a keyboard-first terminal user interface for managing Apple
-Container operations on macOS 26.x (Apple Silicon). It provides a command-safe
+Container operations on macOS 27.x (Apple Silicon). It provides a command-safe
 wrapper around the Apple Container CLI, enabling developers to perform container
 lifecycle operations, image management, and daemon control without memorizing
 command syntax.
@@ -51,7 +46,7 @@ The TUI implements the following workflows as defined in specs
 - **Daemon Management**: Start and stop the Apple Container daemon with safety
   confirmations and structured status visibility (`running`, `stopped`,
   `unknown`).
-- **Local Kubernetes Clusters**: List, create, start, delete, load images into,
+- **Local Kubernetes Clusters**: List, create, delete,
   and write kubeconfig for Apple Container-managed local Kubernetes clusters.
 - **Safety Features**: Dry-run mode for all operations; command preview before
   execution; type-to-confirm for destructive actions; JSONL command logging with
@@ -76,8 +71,8 @@ preview. Destructive actions (delete, stop daemon, delete stopped containers)
 MUST require explicit confirmation and MUST support a dry-run mode that shows
 the exact command without executing it.
 
-### II. macOS 26.x + Apple Silicon Target
-The project MUST run on macOS 26.x on Apple Silicon (M-series). Cross-platform
+### II. macOS 27.x + Apple Silicon Target
+The project MUST run on macOS 27.x on Apple Silicon (M-series). Cross-platform
 support is out of scope unless the constitution is amended.
 
 ### III. Local-Only Operation
@@ -113,7 +108,7 @@ option toggles) MUST include targeted builder/parser and UI-flow tests.
   action. This may live in the feature spec or in a companion contract document
   under `specs/<feature>/contracts/`.
 - Any new destructive action MUST include a dry-run path and confirmation copy.
-- Manual verification MUST be performed on macOS 26.x before release.
+- Manual verification MUST be performed on macOS 27.x before release.
 - Releases MUST follow semantic versioning with clear changelogs.
 
 ## Governance
@@ -125,4 +120,4 @@ option toggles) MUST include targeted builder/parser and UI-flow tests.
 - Exceptions require written justification in the implementation plan's
 	Complexity Tracking section.
 
-**Version**: 0.4.0 | **Ratified**: 2026-02-11 | **Last Amended**: 2026-09-15
+**Version**: 0.4.0 | **Ratified**: 2026-02-11 | **Last Amended**: 2026-11-09

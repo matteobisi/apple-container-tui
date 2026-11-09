@@ -138,7 +138,7 @@ func (m KubernetesClusterSubmenuScreen) View() string {
 
 func (m KubernetesClusterSubmenuScreen) buildOptions() []kubernetesSubmenuOption {
 	options := []kubernetesSubmenuOption{{"Refresh clusters", "refresh"}}
-	return append(options, kubernetesSubmenuOption{"Load image", "load-image"}, kubernetesSubmenuOption{"Write kubeconfig", "write-config"}, kubernetesSubmenuOption{"Delete cluster", "delete"}, kubernetesSubmenuOption{"Create cluster", "create"}, kubernetesSubmenuOption{"Back", "back"})
+	return append(options, kubernetesSubmenuOption{"Write kubeconfig", "write-config"}, kubernetesSubmenuOption{"Delete cluster", "delete"}, kubernetesSubmenuOption{"Create cluster", "create"}, kubernetesSubmenuOption{"Back", "back"})
 }
 
 func (m KubernetesClusterSubmenuScreen) selectOption(option kubernetesSubmenuOption) (KubernetesClusterSubmenuScreen, tea.Cmd) {
@@ -147,11 +147,6 @@ func (m KubernetesClusterSubmenuScreen) selectOption(option kubernetesSubmenuOpt
 		return m, func() tea.Msg { return screenChangeMsg{target: ScreenKubernetesClusterList} }
 	case "create":
 		return m, func() tea.Msg { return screenChangeMsg{target: ScreenKubernetesCreate, push: true} }
-	case "load-image":
-		cluster := m.cluster
-		return m, func() tea.Msg {
-			return screenChangeMsg{target: ScreenKubernetesLoadImage, cluster: &cluster, push: true}
-		}
 	case "write-config":
 		cluster := m.cluster
 		return m, func() tea.Msg {
