@@ -43,7 +43,6 @@ type AppModel struct {
 	kubernetesList        KubernetesClusterListScreen
 	kubernetesSub         KubernetesClusterSubmenuScreen
 	kubernetesCreate      KubernetesCreateScreen
-	kubernetesLoadImage   KubernetesLoadImageScreen
 	kubernetesWriteConfig KubernetesWriteConfigScreen
 	filePicker            FilePickerScreen
 	buildScreen           BuildScreen
@@ -78,7 +77,6 @@ func NewAppModel(executor services.CommandExecutor, version string) AppModel {
 		kubernetesList:        NewKubernetesClusterListScreen(executor),
 		kubernetesSub:         NewKubernetesClusterSubmenuScreen(executor),
 		kubernetesCreate:      NewKubernetesCreateScreen(executor),
-		kubernetesLoadImage:   NewKubernetesLoadImageScreen(executor),
 		kubernetesWriteConfig: NewKubernetesWriteConfigScreen(executor),
 		filePicker:            NewFilePickerScreen(executor),
 		buildScreen:           NewBuildScreen(executor, ""),
@@ -121,7 +119,6 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.kubernetesList, _ = m.kubernetesList.Update(message)
 		m.kubernetesSub, _ = m.kubernetesSub.Update(message)
 		m.kubernetesCreate, _ = m.kubernetesCreate.Update(message)
-		m.kubernetesLoadImage, _ = m.kubernetesLoadImage.Update(message)
 		m.kubernetesWriteConfig, _ = m.kubernetesWriteConfig.Update(message)
 		m.filePicker, _ = m.filePicker.Update(message)
 		m.buildScreen, _ = m.buildScreen.Update(message)
@@ -163,7 +160,6 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			clusterCopy := *message.cluster
 			m.selectedCluster = &clusterCopy
 			m.kubernetesSub = m.kubernetesSub.SetCluster(clusterCopy)
-			m.kubernetesLoadImage = m.kubernetesLoadImage.SetCluster(clusterCopy)
 			m.kubernetesWriteConfig = m.kubernetesWriteConfig.SetCluster(clusterCopy)
 		}
 		if message.target == ScreenImagePull {
@@ -229,8 +225,6 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case ScreenKubernetesCreate:
 			m.kubernetesCreate = m.kubernetesCreate.Reset()
 			cmd = m.kubernetesCreate.Init()
-		case ScreenKubernetesLoadImage:
-			cmd = m.kubernetesLoadImage.Init()
 		case ScreenKubernetesWriteConfig:
 			cmd = m.kubernetesWriteConfig.Init()
 		case ScreenFilePicker:
@@ -324,10 +318,6 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case ScreenKubernetesCreate:
 			updated, updateCmd := m.kubernetesCreate.Update(msg)
 			m.kubernetesCreate = updated
-			cmd = tea.Batch(cmd, updateCmd)
-		case ScreenKubernetesLoadImage:
-			updated, updateCmd := m.kubernetesLoadImage.Update(msg)
-			m.kubernetesLoadImage = updated
 			cmd = tea.Batch(cmd, updateCmd)
 		case ScreenKubernetesWriteConfig:
 			updated, updateCmd := m.kubernetesWriteConfig.Update(msg)
@@ -432,8 +422,6 @@ func (m AppModel) View() string {
 		return m.kubernetesSub.View() + "\n" + status
 	case ScreenKubernetesCreate:
 		return m.kubernetesCreate.View() + "\n" + status
-	case ScreenKubernetesLoadImage:
-		return m.kubernetesLoadImage.View() + "\n" + status
 	case ScreenKubernetesWriteConfig:
 		return m.kubernetesWriteConfig.View() + "\n" + status
 	case ScreenFilePicker:
@@ -516,11 +504,6 @@ func (m AppModel) statusBarInfo() (string, string) {
 		if m.kubernetesCreate.preview != nil {
 			preview = m.kubernetesCreate.preview.Command.String()
 		}
-	case ScreenKubernetesLoadImage:
-		label = "Load Kubernetes Image"
-		if m.kubernetesLoadImage.preview != nil {
-			preview = m.kubernetesLoadImage.preview.Command.String()
-		}
 	case ScreenKubernetesWriteConfig:
 		label = "Write Kubernetes Kubeconfig"
 		if m.kubernetesWriteConfig.preview != nil {
@@ -598,8 +581,6 @@ func (m AppModel) isLoading() bool {
 		return m.kubernetesSub.loading
 	case ScreenKubernetesCreate:
 		return m.kubernetesCreate.loading
-	case ScreenKubernetesLoadImage:
-		return m.kubernetesLoadImage.loading
 	case ScreenKubernetesWriteConfig:
 		return m.kubernetesWriteConfig.loading
 	case ScreenImagePull:
@@ -674,8 +655,6 @@ func (m AppModel) initForActive() tea.Cmd {
 		return m.kubernetesSub.Init()
 	case ScreenKubernetesCreate:
 		return m.kubernetesCreate.Init()
-	case ScreenKubernetesLoadImage:
-		return m.kubernetesLoadImage.Init()
 	case ScreenKubernetesWriteConfig:
 		return m.kubernetesWriteConfig.Init()
 	case ScreenFilePicker:

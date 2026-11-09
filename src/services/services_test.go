@@ -61,6 +61,10 @@ func TestKubernetesBuilders(t *testing.T) {
 	if err != nil || strings.Join(list.Args, " ") != "cluster list" {
 		t.Fatalf("unexpected list command: %v %v", list, err)
 	}
+	nodeList, err := KubernetesListBuilder{Nodes: true}.Build()
+	if err != nil || strings.Join(nodeList.Args, " ") != "cluster list --nodes" {
+		t.Fatalf("unexpected per-node list command: %v %v", nodeList, err)
+	}
 
 	create, err := KubernetesCreateBuilder{Name: "dev", CPUs: "4", Memory: "8G", RemoveOnStop: true, NodeImage: "kindest/node:latest"}.Build()
 	if err != nil || strings.Join(create.Args, " ") != "cluster create --name dev --cpus 4 --memory 8G --rm --node-image kindest/node:latest" {
@@ -70,24 +74,41 @@ func TestKubernetesBuilders(t *testing.T) {
 	if err != nil || strings.Join(deleteCmd.Args, " ") != "cluster delete --name dev" {
 		t.Fatalf("unexpected delete command: %v %v", deleteCmd, err)
 	}
-	load, err := KubernetesLoadImageBuilder{ClusterName: "dev", Image: "demo:latest", Platform: "linux/arm64"}.Build()
-	if err != nil || strings.Join(load.Args, " ") != "cluster load-image --name dev demo:latest --platform linux/arm64" {
-		t.Fatalf("unexpected load-image command: %v %v", load, err)
-	}
 	multiCreate, err := KubernetesCreateBuilder{Name: "dev", Workers: "2", CNI: "NONE"}.Build()
 	if err != nil || strings.Join(multiCreate.Args, " ") != "cluster create --name dev --workers 2 --cni NONE" {
 		t.Fatalf("unexpected multi-worker create command: %v %v", multiCreate, err)
 	}
-	zeroWorkers, err := KubernetesCreateBuilder{Name: "dev"}.Build()
+	zeroWorkers, err := KubernetesCreateBuilder{Name: "dev", Workers: "0"}.Build()
 	if err != nil || strings.Contains(strings.Join(zeroWorkers.Args, " "), "--workers") {
-		t.Fatalf("empty workers must be omitted: %v %v", zeroWorkers, err)
+		t.Fatalf("zero workers must be omitted: %v %v", zeroWorkers, err)
 	}
-	nodeLoad, err := KubernetesLoadImageBuilder{ClusterName: "dev", Image: "demo:latest", Nodes: []string{"n1", "n2"}}.Build()
-	if err != nil || strings.Join(nodeLoad.Args, " ") != "cluster load-image --name dev demo:latest --node n1 --node n2" {
-		t.Fatalf("unexpected node-targeted load-image command: %v %v", nodeLoad, err)
+	sizedWorkers, err := KubernetesCreateBuilder{Name: "dev", Workers: "count=2,cpus=2,memory=4G"}.Build()
+	if err != nil || strings.Join(sizedWorkers.Args, " ") != "cluster create --name dev --workers count=2,cpus=2,memory=4G" {
+		t.Fatalf("unexpected sized workers create command: %v %v", sizedWorkers, err)
+	}
+	multiGroup, err := KubernetesCreateBuilder{Name: "dev", Workers: "count=1,cpus=2,memory=4G count=2,cpus=4,memory=8G"}.Build()
+	if err != nil || strings.Join(multiGroup.Args, " ") != "cluster create --name dev --workers count=1,cpus=2,memory=4G --workers count=2,cpus=4,memory=8G" {
+		t.Fatalf("unexpected multi-group workers create command: %v %v", multiGroup, err)
+	}
+	sharedStore, err := KubernetesCreateBuilder{Name: "dev", SharedImageStore: true}.Build()
+	if err != nil || strings.Join(sharedStore.Args, " ") != "cluster create --name dev --shared-image-store" {
+		t.Fatalf("unexpected shared-image-store create command: %v %v", sharedStore, err)
+	}
+	plainCreate, err := KubernetesCreateBuilder{Name: "dev"}.Build()
+	if err != nil || strings.Contains(strings.Join(plainCreate.Args, " "), "--shared-image-store") {
+		t.Fatalf("shared-image-store must be omitted by default: %v %v", plainCreate, err)
 	}
 	if _, err := (KubernetesCreateBuilder{Workers: "bad"}).Build(); err == nil {
 		t.Fatal("expected invalid workers error")
+	}
+	if _, err := (KubernetesCreateBuilder{Workers: "count=-1"}).Build(); err == nil {
+		t.Fatal("expected negative workers count error")
+	}
+	if _, err := (KubernetesCreateBuilder{Workers: "count=2,cpus=0"}).Build(); err == nil {
+		t.Fatal("expected invalid workers cpus error")
+	}
+	if _, err := (KubernetesCreateBuilder{Workers: "cpus=2"}).Build(); err == nil {
+		t.Fatal("expected missing workers count error")
 	}
 	config, err := KubernetesWriteConfigBuilder{ClusterName: "dev", KubeconfigPath: "/tmp/config"}.Build()
 	if err != nil || strings.Join(config.Args, " ") != "cluster write-config --name dev --kubeconfig /tmp/config" {
@@ -95,9 +116,6 @@ func TestKubernetesBuilders(t *testing.T) {
 	}
 	if _, err := (KubernetesDeleteBuilder{}).Build(); err == nil {
 		t.Fatal("expected missing cluster name error")
-	}
-	if _, err := (KubernetesLoadImageBuilder{Image: ""}).Build(); err == nil {
-		t.Fatal("expected missing image error")
 	}
 }
 
@@ -138,6 +156,19 @@ func TestParseKubernetesList(t *testing.T) {
 	clusters, err = ParseKubernetesList(liveOutput)
 	if err != nil || len(clusters) != 1 || clusters[0].Name != "sighup-local" || clusters[0].Memory != "16384 MB" || clusters[0].Ports != "6445->6443" {
 		t.Fatalf("expected blank-cluster control-plane row to be recovered: %#v %v", clusters, err)
+	}
+	aggregateOutput := "NAME   NODES  K8S VERSION  STATE\n" +
+		"dev    3      v1.35.5      running\n" +
+		"solo   1      v1.35.5      stopped\n"
+	clusters, err = ParseKubernetesList(aggregateOutput)
+	if err != nil || len(clusters) != 2 {
+		t.Fatalf("expected two aggregate clusters: %#v %v", clusters, err)
+	}
+	if clusters[0].Name != "dev" || clusters[0].State != models.KubernetesClusterStateRunning || len(clusters[0].Nodes) != 0 {
+		t.Fatalf("unexpected aggregate cluster: %#v", clusters[0])
+	}
+	if clusters[1].Name != "solo" || clusters[1].State != models.KubernetesClusterStateStopped {
+		t.Fatalf("unexpected aggregate cluster: %#v", clusters[1])
 	}
 }
 

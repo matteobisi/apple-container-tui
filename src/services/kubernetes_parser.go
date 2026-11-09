@@ -6,7 +6,10 @@ import (
 	"container-tui/src/models"
 )
 
-// ParseKubernetesList parses the whitespace table printed by `container cluster list`.
+// ParseKubernetesList parses the whitespace tables printed by
+// `container cluster list`: the 1.7.1 default one-row-per-cluster shape
+// (NAME NODES K8S VERSION STATE) and the per-node `--nodes` shape
+// (CLUSTER NODE ROLE STATE CPUS MEMORY ADDR PORTS).
 func ParseKubernetesList(output string) ([]models.KubernetesCluster, error) {
 	clusters := map[string]*models.KubernetesCluster{}
 	order := []string{}
@@ -14,6 +17,18 @@ func ParseKubernetesList(output string) ([]models.KubernetesCluster, error) {
 	for _, line := range strings.Split(output, "\n") {
 		fields := strings.Fields(line)
 		if len(fields) == 0 || fields[0] == "CLUSTER" || fields[0] == "PORTS" {
+			continue
+		}
+		if fields[0] == "NAME" {
+			continue
+		}
+		if isAggregateClusterRow(fields) {
+			cluster := clusters[fields[0]]
+			if cluster == nil {
+				cluster = &models.KubernetesCluster{Name: fields[0], State: normalizeKubernetesState(fields[len(fields)-1])}
+				clusters[fields[0]] = cluster
+				order = append(order, fields[0])
+			}
 			continue
 		}
 		name, offset := currentName, 0
@@ -52,7 +67,9 @@ func ParseKubernetesList(output string) ([]models.KubernetesCluster, error) {
 	result := make([]models.KubernetesCluster, 0, len(order))
 	for _, name := range order {
 		cluster := clusters[name]
-		cluster.State = aggregateKubernetesState(cluster.Nodes)
+		if len(cluster.Nodes) > 0 || cluster.State == "" {
+			cluster.State = aggregateKubernetesState(cluster.Nodes)
+		}
 		result = append(result, *cluster)
 	}
 	return result, nil
@@ -60,6 +77,25 @@ func ParseKubernetesList(output string) ([]models.KubernetesCluster, error) {
 
 func isKubernetesRole(value string) bool {
 	return strings.Contains(value, "control-plane") || value == "worker"
+}
+
+// isAggregateClusterRow reports whether fields look like a 1.7.1 default
+// one-row-per-cluster line (no role token, trailing state token).
+func isAggregateClusterRow(fields []string) bool {
+	if len(fields) < 3 {
+		return false
+	}
+	for _, field := range fields {
+		if isKubernetesRole(field) {
+			return false
+		}
+	}
+	switch strings.ToLower(fields[len(fields)-1]) {
+	case "running", "stopped", "unknown":
+		return true
+	default:
+		return false
+	}
 }
 
 func clusterNameFromControlPlane(nodeName string) string {

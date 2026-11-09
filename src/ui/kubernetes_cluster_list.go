@@ -25,6 +25,7 @@ type KubernetesClusterListScreen struct {
 	loading   bool
 	errorMsg  string
 	hasLoaded bool
+	showNodes bool
 }
 
 func NewKubernetesClusterListScreen(executor services.CommandExecutor) KubernetesClusterListScreen {
@@ -56,6 +57,10 @@ func (m KubernetesClusterListScreen) Update(msg tea.Msg) (KubernetesClusterListS
 		case "down", "j":
 			m.cursor = min(len(m.clusters)-1, m.cursor+1)
 		case "r":
+			m.loading = true
+			return m, m.fetchClustersCmd()
+		case "N":
+			m.showNodes = !m.showNodes
 			m.loading = true
 			return m, m.fetchClustersCmd()
 		case "c":
@@ -108,7 +113,11 @@ func (m KubernetesClusterListScreen) View() string {
 		builder.WriteString(table.Render(width, m.cursor))
 	}
 	builder.WriteString(strings.Repeat("─", width) + "\n")
-	builder.WriteString("\n" + RenderMuted("Keys: up/down, enter=submenu, c=create, r=refresh, esc=containers, q=quit") + "\n")
+	mode := "cluster summary (N=node detail)"
+	if m.showNodes {
+		mode = "per-node detail (N=summary)"
+	}
+	builder.WriteString("\n" + RenderMuted("Keys: up/down, enter=submenu, c=create, r=refresh, N="+mode+", esc=containers, q=quit") + "\n")
 	return builder.String()
 }
 
@@ -121,7 +130,7 @@ func (m KubernetesClusterListScreen) selectedCluster() (models.KubernetesCluster
 
 func (m KubernetesClusterListScreen) fetchClustersCmd() tea.Cmd {
 	return func() tea.Msg {
-		command, err := (services.KubernetesListBuilder{}).Build()
+		command, err := (services.KubernetesListBuilder{Nodes: m.showNodes}).Build()
 		if err != nil {
 			return kubernetesListLoadedMsg{err: err}
 		}

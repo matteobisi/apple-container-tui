@@ -284,7 +284,10 @@ func TestKubernetesFlow(t *testing.T) {
 
 	submenu := NewKubernetesClusterSubmenuScreen(flowExecutor{}).SetCluster(cluster)
 	if strings.Contains(submenu.View(), "Start cluster") {
-		t.Fatalf("start action must not be offered on container 1.6.1")
+		t.Fatalf("start action must not be offered on container 1.7.1")
+	}
+	if strings.Contains(submenu.View(), "Load image") {
+		t.Fatalf("load-image action must not be offered on container 1.7.1")
 	}
 	submenu.cursor = 1
 	updatedSubmenu, _ := submenu.Update(tea.KeyMsg{Type: tea.KeyEnter})
@@ -317,19 +320,12 @@ func TestKubernetesFormPreviews(t *testing.T) {
 
 	create := NewKubernetesCreateScreen(flowExecutor{})
 	create.inputs[0].SetValue("demo")
-	create.inputs[5].SetValue("2")
+	create.inputs[5].SetValue("count=2,cpus=2,memory=4G")
 	create.inputs[6].SetValue("NONE")
+	create.inputs[7].SetValue("y")
 	updatedCreate, _ := create.Update(tea.KeyMsg{Type: tea.KeyEnter})
-	if updatedCreate.preview == nil || !strings.Contains(updatedCreate.preview.Command.String(), "cluster create --name demo --workers 2 --cni NONE") {
-		t.Fatalf("expected multi-worker create preview: %v", updatedCreate.preview)
-	}
-
-	load := NewKubernetesLoadImageScreen(flowExecutor{}).SetCluster(cluster)
-	load.inputs[0].SetValue("nginx:latest")
-	load.inputs[2].SetValue("n1,n2")
-	updatedLoad, _ := load.Update(tea.KeyMsg{Type: tea.KeyEnter})
-	if updatedLoad.preview == nil || !strings.Contains(updatedLoad.preview.Command.String(), "cluster load-image --name dev-cluster nginx:latest --node n1 --node n2") {
-		t.Fatalf("expected node-targeted load-image preview")
+	if updatedCreate.preview == nil || !strings.Contains(updatedCreate.preview.Command.String(), "cluster create --name demo --workers count=2,cpus=2,memory=4G --cni NONE --shared-image-store") {
+		t.Fatalf("expected sized-worker shared-store create preview: %v", updatedCreate.preview)
 	}
 
 	writeConfig := NewKubernetesWriteConfigScreen(flowExecutor{}).SetCluster(cluster)

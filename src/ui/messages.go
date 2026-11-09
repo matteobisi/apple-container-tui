@@ -42,8 +42,6 @@ const (
 	ScreenKubernetesClusterSubmenu ActiveScreen = "kubernetes-cluster-submenu"
 	// ScreenKubernetesCreate creates a local Kubernetes cluster.
 	ScreenKubernetesCreate ActiveScreen = "kubernetes-create"
-	// ScreenKubernetesLoadImage loads an image into a Kubernetes cluster.
-	ScreenKubernetesLoadImage ActiveScreen = "kubernetes-load-image"
 	// ScreenKubernetesWriteConfig writes a kubeconfig for a Kubernetes cluster.
 	ScreenKubernetesWriteConfig ActiveScreen = "kubernetes-write-config"
 	// ScreenFilePicker shows the build file picker.

@@ -8,22 +8,27 @@ import (
 	"container-tui/src/models"
 )
 
-type KubernetesListBuilder struct{}
+type KubernetesListBuilder struct{ Nodes bool }
 
 func (KubernetesListBuilder) Validate() error { return nil }
 
-func (KubernetesListBuilder) Build() (models.Command, error) {
-	return models.Command{Executable: "container", Args: []string{"cluster", "list"}}, nil
+func (b KubernetesListBuilder) Build() (models.Command, error) {
+	args := []string{"cluster", "list"}
+	if b.Nodes {
+		args = append(args, "--nodes")
+	}
+	return models.Command{Executable: "container", Args: args}, nil
 }
 
 type KubernetesCreateBuilder struct {
-	Name         string
-	CPUs         string
-	Memory       string
-	RemoveOnStop bool
-	NodeImage    string
-	Workers      string
-	CNI          string
+	Name             string
+	CPUs             string
+	Memory           string
+	RemoveOnStop     bool
+	NodeImage        string
+	Workers          string
+	CNI              string
+	SharedImageStore bool
 }
 
 func (b KubernetesCreateBuilder) Validate() error {
@@ -49,12 +54,75 @@ func (b KubernetesCreateBuilder) Validate() error {
 		}
 	}
 	if strings.TrimSpace(b.Workers) != "" {
-		value, err := strconv.Atoi(strings.TrimSpace(b.Workers))
-		if err != nil || value < 0 {
-			return fmt.Errorf("workers must be a non-negative integer")
+		if _, err := splitWorkersSpecs(b.Workers); err != nil {
+			return err
 		}
 	}
 	return nil
+}
+
+// splitWorkersSpecs parses the Workers field into one --workers spec per
+// group. Each group is either a bare non-negative count ("2") or a
+// count=<n>,cpus=<n>,memory=<size> spec; groups are separated by whitespace
+// or semicolons (commas are intra-spec separators).
+func splitWorkersSpecs(raw string) ([]string, error) {
+	normalized := strings.ReplaceAll(raw, ";", " ")
+	var specs []string
+	for _, token := range strings.Fields(normalized) {
+		if !strings.Contains(token, "=") {
+			for _, piece := range strings.Split(token, ",") {
+				piece = strings.TrimSpace(piece)
+				if piece == "" {
+					continue
+				}
+				value, err := strconv.Atoi(piece)
+				if err != nil || value < 0 {
+					return nil, fmt.Errorf("workers must be a non-negative integer or count=<n>,cpus=<n>,memory=<size>")
+				}
+				if value == 0 {
+					continue
+				}
+				specs = append(specs, piece)
+			}
+			continue
+		}
+		count := -1
+		for _, segment := range strings.Split(token, ",") {
+			segment = strings.TrimSpace(segment)
+			kv := strings.SplitN(segment, "=", 2)
+			if len(kv) != 2 || strings.TrimSpace(kv[0]) == "" || strings.TrimSpace(kv[1]) == "" {
+				return nil, fmt.Errorf("workers must be a non-negative integer or count=<n>,cpus=<n>,memory=<size>")
+			}
+			key, value := strings.TrimSpace(kv[0]), strings.TrimSpace(kv[1])
+			switch key {
+			case "count":
+				parsed, err := strconv.Atoi(value)
+				if err != nil || parsed < 0 {
+					return nil, fmt.Errorf("workers count must be a non-negative integer")
+				}
+				count = parsed
+			case "cpus":
+				parsed, err := strconv.Atoi(value)
+				if err != nil || parsed < 1 {
+					return nil, fmt.Errorf("workers cpus must be a positive integer")
+				}
+			case "memory":
+				if _, err := normalizeRequiredToken(value, "workers memory"); err != nil {
+					return nil, err
+				}
+			default:
+				return nil, fmt.Errorf("unsupported workers setting %q (expected count, cpus, or memory)", key)
+			}
+		}
+		if count < 0 {
+			return nil, fmt.Errorf("workers spec %q must include count=<n>", token)
+		}
+		if count == 0 {
+			continue
+		}
+		specs = append(specs, token)
+	}
+	return specs, nil
 }
 
 func (b KubernetesCreateBuilder) Build() (models.Command, error) {
@@ -80,11 +148,20 @@ func (b KubernetesCreateBuilder) Build() (models.Command, error) {
 		value, _ := normalizeRequiredToken(b.NodeImage, "node image")
 		args = append(args, "--node-image", value)
 	}
-	if strings.TrimSpace(b.Workers) != "" && strings.TrimSpace(b.Workers) != "0" {
-		args = append(args, "--workers", strings.TrimSpace(b.Workers))
+	if strings.TrimSpace(b.Workers) != "" {
+		specs, err := splitWorkersSpecs(b.Workers)
+		if err != nil {
+			return models.Command{}, err
+		}
+		for _, spec := range specs {
+			args = append(args, "--workers", spec)
+		}
 	}
 	if strings.TrimSpace(b.CNI) != "" {
 		args = append(args, "--cni", strings.TrimSpace(b.CNI))
+	}
+	if b.SharedImageStore {
+		args = append(args, "--shared-image-store")
 	}
 	return models.Command{Executable: "container", Args: args}, nil
 }
@@ -97,47 +174,6 @@ func (b KubernetesDeleteBuilder) Build() (models.Command, error) {
 		return models.Command{}, err
 	}
 	return models.Command{Executable: "container", Args: []string{"cluster", "delete", "--name", name}}, nil
-}
-
-type KubernetesLoadImageBuilder struct {
-	ClusterName string
-	Image       string
-	Platform    string
-	Nodes       []string
-}
-
-func (b KubernetesLoadImageBuilder) Build() (models.Command, error) {
-	image, err := normalizeRequiredToken(b.Image, "image")
-	if err != nil {
-		return models.Command{}, err
-	}
-	args := []string{"cluster", "load-image"}
-	if b.ClusterName != "" {
-		name, err := normalizeRequiredToken(b.ClusterName, "cluster name")
-		if err != nil {
-			return models.Command{}, err
-		}
-		args = append(args, "--name", name)
-	}
-	args = append(args, image)
-	if b.Platform != "" {
-		platform, err := normalizeRequiredToken(b.Platform, "platform")
-		if err != nil {
-			return models.Command{}, err
-		}
-		args = append(args, "--platform", platform)
-	}
-	for _, node := range b.Nodes {
-		node = strings.TrimSpace(node)
-		if node == "" {
-			continue
-		}
-		if strings.ContainsAny(node, " \t") {
-			return models.Command{}, fmt.Errorf("node name must not contain whitespace")
-		}
-		args = append(args, "--node", node)
-	}
-	return models.Command{Executable: "container", Args: args}, nil
 }
 
 type KubernetesWriteConfigBuilder struct{ ClusterName, KubeconfigPath string }
